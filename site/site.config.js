@@ -12,7 +12,7 @@ export default {
   // 作者信息
   author: {
     name: 'Chuckle',
-    handle: '@chuckle',
+    handle: 'Chuckle',
     url: 'http://localhost:8088/about/',
     avatar: '/avatar.svg',
   },

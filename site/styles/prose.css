@@ -2,18 +2,19 @@
 @layer components;
 
 @layer components {
+  /* ── 正文：多端自适应字号 + 紧凑排版 ── */
   .prose {
     font-family: var(--font-serif);
-    font-size: var(--text-prose);
-    line-height: var(--leading);
+    font-size: clamp(16px, 1.6vw, 19px);
+    line-height: 1.72;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
-  /* ── 段落 ── */
   .prose p {
     margin-bottom: var(--rhythm-p);
   }
 
-  /* ── 标题（垂直节奏） ── */
   .prose h1 {
     margin-bottom: var(--rhythm-h1-bot);
     font-family: var(--font-sans);
@@ -24,16 +25,16 @@
   .prose h2 {
     margin: var(--rhythm-h2-top) 0 var(--rhythm-h2-bot);
     font-family: var(--font-sans);
-    font-size: var(--text-lg);
+    font-size: 1.25em;
     font-weight: 600;
-    line-height: 1.18;
-    letter-spacing: -0.03em;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
   }
 
   .prose h3 {
     margin: var(--rhythm-h3-top) 0 var(--rhythm-h3-bot);
     font-family: var(--font-sans);
-    font-size: 1.2em;
+    font-size: 1.1em;
     font-weight: 600;
     line-height: 1.25;
   }
@@ -43,55 +44,52 @@
     font-family: var(--font-mono);
     font-size: 0.85em;
     background: var(--code-bg);
-    padding: 0.15em 0.4em;
+    padding: 0.12em 0.35em;
     border-radius: 3px;
     color: var(--text);
   }
 
-  /* ── 代码块（WebStorm 风格） ── */
+  /* ── 代码块 ── */
   .prose pre {
-    margin: 2.4em 0;
+    margin: 1.4em 0;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--code-bg);
     border: none;
     position: relative;
     box-shadow: inset 0 0 0 1px var(--line);
+    max-width: 100%;
   }
 
-  /* 覆盖 Shiki 内联 padding，由 code 元素接管 */
   .prose pre.shiki {
     padding: 0 !important;
   }
 
-  /* WebStorm 风格标题栏 —— 真正的块级元素，不覆盖代码 */
   .prose pre::before {
     content: '';
     display: block;
     width: 100%;
-    height: 33px;
+    height: 28px;
     background-color: var(--surface);
     background-image:
-      radial-gradient(circle at 18px center, #ff5f56 4px, transparent 4.5px),
-      radial-gradient(circle at 36px center, #ffbd2e 4px, transparent 4.5px),
-      radial-gradient(circle at 54px center, #27c93f 4px, transparent 4.5px);
+      radial-gradient(circle at 16px center, #ff5f56 3.5px, transparent 4px),
+      radial-gradient(circle at 32px center, #ffbd2e 3.5px, transparent 4px),
+      radial-gradient(circle at 48px center, #27c93f 3.5px, transparent 4px);
     background-repeat: no-repeat;
     border-bottom: 1px solid var(--line);
     flex-shrink: 0;
   }
 
-  /* 代码内容区 */
   .prose pre code {
     display: block;
     width: 100%;
-    padding: var(--space-5) var(--space-6);
+    padding: var(--space-3) var(--space-4);
     background: none;
-    font-size: 0.82em;
-    line-height: 1.6;
+    font-size: 0.8em;
+    line-height: 1.55;
     tab-size: 2;
   }
 
-  /* 暗色模式：选中文字不再刺眼 */
   [data-theme="dark"] .prose pre code ::selection,
   [data-theme="dark"] .prose pre code ::-moz-selection {
     background: rgba(255, 255, 255, 0.18) !important;
@@ -105,21 +103,21 @@
   /* ── 引用块 ── */
   .prose blockquote {
     margin: var(--rhythm-bq) 0;
-    padding-left: 1.2em;
+    padding-left: 1em;
     border-left: 2px solid var(--line);
     color: var(--muted);
     font-style: italic;
   }
 
   .prose blockquote p {
-    margin-bottom: 0.5em;
+    margin-bottom: 0.3em;
   }
 
   /* ── 列表 ── */
   .prose ul,
   .prose ol {
-    margin: 1em 0;
-    padding-left: 1.5em;
+    margin: 0.6em 0;
+    padding-left: 1.3em;
     list-style: revert;
   }
 
@@ -129,23 +127,22 @@
 
   .prose ul ul,
   .prose ol ol {
-    margin: 0.3em 0;
+    margin: 0.2em 0;
   }
 
   /* ── 图片 ── */
   .prose img {
-    margin: 2em auto;
+    margin: 1.2em auto;
     border-radius: var(--radius-sm);
+    max-width: 100%;
   }
 
-  /* ── 水平线 ── */
   .prose hr {
     border: none;
     border-top: 1px solid var(--line);
-    margin: 3em 0;
+    margin: 1.5em 0;
   }
 
-  /* ── 强调 ── */
   .prose strong {
     font-weight: 600;
   }
@@ -154,9 +151,9 @@
   .prose table {
     width: 100%;
     border-collapse: collapse;
-    margin: 2em 0;
-    font-size: 0.92em;
-    line-height: 1.5;
+    margin: 1.2em 0;
+    font-size: 0.9em;
+    line-height: 1.4;
   }
 
   .prose thead {
@@ -165,14 +162,14 @@
 
   .prose th,
   .prose td {
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-2) var(--space-3);
     text-align: left;
   }
 
   .prose th {
     font-weight: 600;
     font-family: var(--font-sans);
-    font-size: 0.9em;
+    font-size: 0.88em;
     color: var(--muted);
     letter-spacing: 0.02em;
   }

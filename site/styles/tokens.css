@@ -40,15 +40,15 @@
     --space-16: 64px;
     --space-24: 96px;
 
-    /* ── 垂直节奏专用 ── */
-    --rhythm-p:       1.5rem;   /* 段落底部间距 */
-    --rhythm-h1-bot:  0.5rem;
-    --rhythm-h2-top:  2rem;
-    --rhythm-h2-bot:  0.75rem;
-    --rhythm-h3-top:  1.5rem;
-    --rhythm-h3-bot:  0.5rem;
-    --rhythm-li:      0.25rem;  /* 列表项间距 */
-    --rhythm-bq:      1rem;     /* 引用块上下 */
+    /* ── 垂直节奏（紧凑） ── */
+    --rhythm-p:       1rem;     /* 段落底部间距 */
+    --rhythm-h1-bot:  0.25rem;
+    --rhythm-h2-top:  1.2rem;
+    --rhythm-h2-bot:  0.4rem;
+    --rhythm-h3-top:  1rem;
+    --rhythm-h3-bot:  0.3rem;
+    --rhythm-li:      0.15rem;  /* 列表项间距 */
+    --rhythm-bq:      0.6rem;   /* 引用块上下 */
 
     /* ── 动效 ── */
     --ease-out:         cubic-bezier(.16, 1, .3, 1);

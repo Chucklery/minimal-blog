@@ -254,28 +254,41 @@
   /* ── 返回顶部按钮 ── */
   .back-to-top {
     position: fixed;
-    bottom: var(--space-8);
-    right: var(--space-8);
-    width: 44px;          /* 触摸目标 ≥ 44pt */
+    bottom: var(--space-6);
+    right: var(--space-6);
+    width: 44px;
     height: 44px;
-    border-radius: 50%;
-    background: var(--surface);
-    border: 1px solid var(--line);
+    background: none;
+    border: none;
     color: var(--muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2em;
     opacity: 0;
-    transition: opacity var(--duration-normal) var(--ease-out);
+    transition: opacity var(--duration-normal) var(--ease-out),
+                color var(--duration-fast) var(--ease-out),
+                transform var(--duration-fast) var(--ease-out);
     z-index: 50;
     pointer-events: none;
+    padding: 0;
+  }
+
+  .back-to-top svg {
+    display: block;
+    width: 22px;
+    height: 22px;
   }
 
   .back-to-top.visible {
-    opacity: 1;
+    opacity: 0.55;
     pointer-events: auto;
+  }
+
+  .back-to-top:hover {
+    opacity: 1;
+    color: var(--text);
+    transform: translateY(-3px);
   }
 
   /* ── 触摸目标：所有可交互元素 ≥ 44x44pt（无障碍优先） ── */
