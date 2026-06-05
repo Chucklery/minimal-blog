@@ -52,6 +52,7 @@ export function renderLayout({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  ${site.basePath ? `<base href="${escapeAttr(site.basePath)}/">` : ''}
 ${meta}
   <link rel="stylesheet" href="/assets/reset.css">
   <link rel="stylesheet" href="/assets/tokens.css">

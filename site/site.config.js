@@ -9,6 +9,9 @@ export default {
   language: 'zh-CN',
   baseUrl: 'http://localhost:8088',
 
+  // GitHub Pages 部署路径
+  basePath: '/minimal-blog',
+
   // 作者信息
   author: {
     name: 'Chuckle',
