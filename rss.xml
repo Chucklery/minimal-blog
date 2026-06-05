@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Chuckle&#39;s Blog</title>
+    <link>http://localhost:8088</link>
+    <description>Writing about code, design, and the spaces between.</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Fri, 05 Jun 2026 16:38:26 GMT</lastBuildDate>
+    <atom:link href="http://localhost:8088/rss.xml" rel="self" type="application/rss+xml"/>
+    
+    <item>
+      <title><![CDATA[极简高性能博客软件总体 Phase 计划]]></title>
+      <link>http://localhost:8088/posts/platform-sutra-interpretation.html</link>
+      <guid isPermaLink="true">http://localhost:8088/posts/platform-sutra-interpretation.html</guid>
+      <description><![CDATA[极简高性能博客软件总体 Phase 计划]]></description>
+      <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title><![CDATA[极简高性能博客软件详细落地方案]]></title>
+      <link>http://localhost:8088/posts/02-MinimalBlog-exact.html</link>
+      <guid isPermaLink="true">http://localhost:8088/posts/02-MinimalBlog-exact.html</guid>
+      <description><![CDATA[产品设计到原型、技术选型、开发、Nginx for Windows 本机部署]]></description>
+      <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title><![CDATA[六祖坛经解译：直指人心的智慧]]></title>
+      <link>http://localhost:8088/posts/platform-sutra-interpretation-1.html</link>
+      <guid isPermaLink="true">http://localhost:8088/posts/platform-sutra-interpretation-1.html</guid>
+      <description><![CDATA[《六祖坛经》全本十品逐品解读——中国佛教唯一被称为经的本土著作，从行由品到付嘱品，从菩提偈到三科三十六对，全面解析惠能顿悟法门。]]></description>
+      <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

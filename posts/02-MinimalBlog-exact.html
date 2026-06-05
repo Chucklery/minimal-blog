@@ -1,0 +1,540 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><base href="/minimal-blog/"><title>极简高性能博客软件详细落地方案 — Chuckle&#39;s Blog</title><meta name="description" content="产品设计到原型、技术选型、开发、Nginx for Windows 本机部署"><meta property="og:title" content="极简高性能博客软件详细落地方案 — Chuckle&#39;s Blog"><meta property="og:description" content="产品设计到原型、技术选型、开发、Nginx for Windows 本机部署"><meta property="og:type" content="article"><meta property="og:url" content="http://localhost:8088/posts/02-MinimalBlog-exact.html"><meta name="twitter:card" content="summary_large_image"><link rel="canonical" href="http://localhost:8088/posts/02-MinimalBlog-exact.html"><script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "极简高性能博客软件详细落地方案 — Chuckle&#39;s Blog",
+    "description": "产品设计到原型、技术选型、开发、Nginx for Windows 本机部署",
+    "datePublished": "2026-06-01"
+  }</script><link rel="stylesheet" href="/assets/reset.css"><link rel="stylesheet" href="/assets/tokens.css"><link rel="stylesheet" href="/assets/base.css"><link rel="stylesheet" href="/assets/layout.css"><link rel="stylesheet" href="/assets/prose.css"><link rel="stylesheet" href="/assets/components.css"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="alternate" type="application/rss+xml" title="Chuckle&#39;s Blog RSS" href="/rss.xml"><script>// 阻止暗色模式闪烁 — 必须在 <head> 中同步执行
+    (function() {
+      var theme = localStorage.getItem('theme');
+      if (!theme) theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();</script></head><body class="page-post"><div class="progress" data-progress></div><header class="site-header"><div class="header-inner"><a href="/" class="site-name">Chuckle's Blog</a><nav class="site-nav"><a href="/">Posts</a> <a href="/archive/">Archive</a> <a href="/search/">Search</a> <a href="/about/">About</a> <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme"><span class="theme-icon-light">☽</span> <span class="theme-icon-dark">☀</span></button></nav></div></header><div class="post-cover"><div class="post-cover-inner"><a href="/" class="post-back-cover">← Back</a><h1 class="post-cover-title">极简高性能博客软件详细落地方案</h1><div class="post-cover-meta"><span>Published</span> <time datetime="2026-06-01">2026/06/01</time> <span>· 7 min read</span></div><div class="post-cover-tags"><span class="post-tag">#zen</span> <span class="post-tag">#buddhism</span> <span class="post-tag">#philosophy</span> <span class="post-tag">#classics</span> <span class="post-tag">#chan</span></div></div></div><main class="post"><article class="post-article"><div class="prose"><h1>极简高性能博客软件详细落地方案：产品设计到原型、技术选型、开发、Nginx for Windows 本机部署</h1><p>生成时间：2026-06-05 15:26 CST</p><h2>0. 项目总览</h2><h2>Goal</h2><p>从 0 到 1 开发一个可复用的极简高性能博客软件，开发系统为 Windows 原生环境，本机部署采用 Nginx for Windows，架构采用“内核 + 站点配置”，不使用前端运行时框架，允许构建期工具。</p><h2>Architecture</h2><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core/ 负责构建能力：内容解析、Markdown 渲染、模板、路由、RSS、Sitemap、资源优化</span></span>
+<span class="line"><span>site/ 负责站点差异：配置、文章、样式、脚本、静态资源</span></span>
+<span class="line"><span>public/ 负责公共静态文件</span></span>
+<span class="line"><span>dist/ 负责构建输出</span></span>
+<span class="line"><span>nginx/ 负责本机部署配置</span></span>
+<span class="line"><span></span></span></code></pre><p>最终浏览器收到：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>静态 HTML + CSS + 少量 Vanilla JS</span></span>
+<span class="line"><span></span></span></code></pre><p>不会有 React/Vue/Svelte 运行时，不会有 hydration，不会在浏览器端解析 Markdown。</p><h2>Tech Stack</h2><ul><li>Windows 10。</li><li>Node.js 22。</li><li>pnpm。</li><li>Vanilla HTML/CSS/JS。</li><li>markdown-it。</li><li>gray-matter。</li><li>Shiki。</li><li>Sharp。</li><li>esbuild。</li><li>Lightning CSS。</li><li>html-minifier-terser。</li><li>Nginx for Windows。</li><li>Playwright。</li><li>Chrome DevTools / Chrome DevTools MCP。</li></ul><hr><h2>1. 产品设计</h2><h3>1.1 产品定位</h3><p>这是一个面向个人开发者、设计师、独立创作者的极简博客系统。</p><p>它不是 CMS，也不是复杂建站平台。</p><p>核心价值：</p><ol><li>写作简单：Markdown 即内容。</li><li>访问极快：构建为静态文件。</li><li>审美高级：少颜色、强排版、克制动效。</li><li>工程可控：不依赖现成博客框架。</li><li>后续可复用：core 与 site 分离。</li><li>可扩展性清楚：主题、站点、模板、构建 pipeline 都有明确扩展点。</li><li>本机可部署：Nginx 服务 <code>dist/</code>。</li></ol><h3>1.2 用户画像</h3><p>目标用户：</p><ul><li>前端开发者。</li><li>想建立个人博客的技术学习者。</li><li>重视审美和性能的人。</li><li>想理解底层构建过程的人。</li><li>不想被框架主题束缚的人。</li></ul><p>用户需求：</p><ul><li>快速写文章。</li><li>页面非常快。</li><li>样式独特，不像模板站。</li><li>后续能改成另一个站。</li><li>本机能长期运行。</li></ul><h3>1.3 MVP 功能</h3><p>第一版必须包含：</p><ol><li>首页文章列表。</li><li>文章详情页。</li><li>归档页。</li><li>关于页。</li><li>Markdown + frontmatter。</li><li>明暗主题。</li><li>阅读进度条。</li><li>代码块复制。</li><li>构建期代码高亮。</li><li>图片优化。</li><li>RSS。</li><li>Sitemap。</li><li>Nginx for Windows 本机部署。</li><li>Playwright smoke test。</li><li>Lighthouse 验收。</li></ol><p>第一版不做：</p><ol><li>登录。</li><li>评论。</li><li>后台编辑器。</li><li>在线发布。</li><li>多用户。</li><li>数据库。</li><li>全文搜索。</li><li>复杂动画。</li><li>前端 SPA 路由。</li></ol><h3>1.4 产品验收标准</h3><p>产品层验收：</p><ul><li>只新增一篇 Markdown，即可生成新文章页。</li><li>修改 <code>site/site.config.js</code> 可以改变站点基础信息。</li><li>首页和文章页视觉一致。</li><li>明暗主题可用。</li><li>本机 Nginx 可访问。</li></ul><p>性能层验收：</p><ul><li>Lighthouse Performance ≥ 95。</li><li>Lighthouse SEO ≥ 95。</li><li>Lighthouse Accessibility ≥ 95。</li><li>JS gzip &lt; 8KB。</li><li>CSS gzip &lt; 15KB。</li><li>无 console error。</li><li>无异常 404/500。</li></ul><hr><h2>2. 原型设计</h2><h3>2.1 页面列表</h3><p>第一版页面：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>/                       首页</span></span>
+<span class="line"><span>/posts/{slug}.html      文章页</span></span>
+<span class="line"><span>/archive/index.html     归档页</span></span>
+<span class="line"><span>/about/index.html       关于页</span></span>
+<span class="line"><span>/rss.xml                RSS</span></span>
+<span class="line"><span>/sitemap.xml            Sitemap</span></span>
+<span class="line"><span>/robots.txt             robots</span></span>
+<span class="line"><span></span></span></code></pre><h3>2.2 首页原型</h3><p>首页结构：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>Header</span></span>
+<span class="line"><span>  - Logo / Site Name</span></span>
+<span class="line"><span>  - Writing</span></span>
+<span class="line"><span>  - Archive</span></span>
+<span class="line"><span>  - About</span></span>
+<span class="line"><span>  - Theme Toggle</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Hero</span></span>
+<span class="line"><span>  - 一句话介绍</span></span>
+<span class="line"><span>  - 简短副标题</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Featured</span></span>
+<span class="line"><span>  - 主推文章</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Recent Posts</span></span>
+<span class="line"><span>  - 文章列表</span></span>
+<span class="line"><span>  - 标题</span></span>
+<span class="line"><span>  - 日期</span></span>
+<span class="line"><span>  - 摘要</span></span>
+<span class="line"><span>  - 标签</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Footer</span></span>
+<span class="line"><span>  - RSS</span></span>
+<span class="line"><span>  - GitHub / X / Email</span></span>
+<span class="line"><span></span></span></code></pre><p>首页原则：</p><ul><li>不做复杂网格。</li><li>不做图片瀑布流。</li><li>文章列表优先可读性。</li><li>空间感比信息密度更重要。</li></ul><h3>2.3 文章页原型</h3><p>文章页结构：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>Progress Bar</span></span>
+<span class="line"><span>Header</span></span>
+<span class="line"><span>  - Back Home</span></span>
+<span class="line"><span>  - Theme Toggle</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Article Header</span></span>
+<span class="line"><span>  - Title</span></span>
+<span class="line"><span>  - Date</span></span>
+<span class="line"><span>  - Reading Time</span></span>
+<span class="line"><span>  - Tags</span></span>
+<span class="line"><span>  - Description</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Article Body</span></span>
+<span class="line"><span>  - Markdown content</span></span>
+<span class="line"><span>  - Code blocks</span></span>
+<span class="line"><span>  - Images</span></span>
+<span class="line"><span>  - Blockquotes</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Optional TOC</span></span>
+<span class="line"><span>  - Desktop sticky</span></span>
+<span class="line"><span>  - Mobile hidden</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Article Footer</span></span>
+<span class="line"><span>  - Previous / Next</span></span>
+<span class="line"><span>  - Back to top</span></span>
+<span class="line"><span></span></span></code></pre><p>正文宽度：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">width: min(100% - 32px, 720px);</span></span>
+<span class="line"></span></code></pre><p>正文行高：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">line-height</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: 1.8;</span></span>
+<span class="line"></span></code></pre><h3>2.4 归档页原型</h3><p>结构：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>Archive</span></span>
+<span class="line"><span>  2026</span></span>
+<span class="line"><span>    - 2026-06-05 文章 A</span></span>
+<span class="line"><span>    - 2026-05-20 文章 B</span></span>
+<span class="line"><span>  2025</span></span>
+<span class="line"><span>    - ...</span></span>
+<span class="line"><span></span></span></code></pre><p>优先按年份分组，不做复杂筛选。</p><h3>2.5 关于页原型</h3><p>结构：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>About</span></span>
+<span class="line"><span>  - 简短介绍</span></span>
+<span class="line"><span>  - 当前关注领域</span></span>
+<span class="line"><span>  - 链接</span></span>
+<span class="line"><span>  - 联系方式</span></span>
+<span class="line"><span></span></span></code></pre><hr><h2>3. 视觉设计</h2><h3>3.1 设计方向</h3><p>关键词：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>calm</span></span>
+<span class="line"><span>precise</span></span>
+<span class="line"><span>editorial</span></span>
+<span class="line"><span>minimal</span></span>
+<span class="line"><span>tactile</span></span>
+<span class="line"><span>fast</span></span>
+<span class="line"><span></span></span></code></pre><p>参考：</p><ul><li><a href="http://steipete.me">steipete.me</a>：开发者个人站、窄内容宽度、monospace 气质、明暗主题、头像和社交入口的轻微反馈。</li><li>Linear：精确、边界感、暗色质感。</li><li>Vercel：黑白、高对比、技术感。</li><li>Notion：阅读友好、出版物气质。</li><li>xAI：冷静、单色、未来感。</li></ul><h3>3.1.1 <a href="http://steipete.me">steipete.me</a> 设计学习结论</h3><p>我实际查看了 <code>https://steipete.me/</code> 的页面结构和 CSS，值得学习的是这些点：</p><ol><li>页面容器克制：主体最大宽度约 <code>48rem</code>，让个人站像“工程师笔记”，不是营销官网。</li><li>Header 很轻：站点名 + 少量导航 + 搜索/主题按钮，下方一条细线建立层级。</li><li>首页人格化：头像、简短介绍、社交链接先出现，文章列表随后出现。</li><li>字体选择有辨识度：站点加载 Atkinson 字体，同时 body 使用 mono 气质，整体更像技术笔记。</li><li>色彩 token 简单：浅色为接近白的背景，深色为蓝灰底，accent 在明暗主题中切换。</li><li>动效克制：主题切换、头像 hover scale、社交图标 rotate、链接 hover accent，不做复杂动画。</li><li>可访问性细节完整：skip-to-content、focus-visible、aria-label、RSS auto-discovery。</li></ol><p>本项目采用这些设计原则，但不采用它的技术栈：<a href="http://steipete.me">steipete.me</a> 当前页面由 Astro 生成并使用 Tailwind 输出，本项目仍坚持自研 Node 构建器 + 原生 HTML/CSS/JS。</p><h3>3.2 色彩系统</h3><p><code>site/styles/tokens.css</code>：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">:root</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  color-scheme</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">light</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6a737d;--shiki-dark:#6A737D">  /* Inspired by steipete.me light theme, adjusted for this project. */</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --bg</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#fdfdfd</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --surface</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">rgba</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">0.72</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --text</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#282728</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --muted</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#6f6f6f</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --line</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#ece9e9</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --accent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#006cac</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --accent-soft</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">color-mix</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#e36209;--shiki-dark:#FFAB70">in</span><span style="color:#e36209;--shiki-dark:#FFAB70"> oklab</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">var</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#e36209;--shiki-dark:#FFAB70">--accent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">) </span><span style="color:#005cc5;--shiki-dark:#79B8FF">12</span><span style="color:#d73a49;--shiki-dark:#F97583">%</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">transparent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --container</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">48</span><span style="color:#d73a49;--shiki-dark:#F97583">rem</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --radius-sm</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">6</span><span style="color:#d73a49;--shiki-dark:#F97583">px</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --radius-md</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">10</span><span style="color:#d73a49;--shiki-dark:#F97583">px</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --ease-standard</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">cubic-bezier</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#005cc5;--shiki-dark:#79B8FF">.4</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">0</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">.2</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">1</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --duration-fast</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">150</span><span style="color:#d73a49;--shiki-dark:#F97583">ms</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --duration-normal</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">250</span><span style="color:#d73a49;--shiki-dark:#F97583">ms</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">[</span><span style="color:#6f42c1;--shiki-dark:#B392F0">data-theme</span><span style="color:#d73a49;--shiki-dark:#F97583">=</span><span style="color:#032f62;--shiki-dark:#9ECBFF">"dark"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">] {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  color-scheme</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">dark</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6a737d;--shiki-dark:#6A737D">  /* Inspired by steipete.me dark theme, with Hermes purple as optional brand override. */</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --bg</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#212737</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --surface</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">rgba</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">0.045</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --text</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#eaedf3</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --muted</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">rgba</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#005cc5;--shiki-dark:#79B8FF">234</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">237</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">243</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">0.68</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --line</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">rgba</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#005cc5;--shiki-dark:#79B8FF">255</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">107</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">1</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">0.36</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --accent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#ff6b01</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --accent-soft</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">color-mix</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#e36209;--shiki-dark:#FFAB70">in</span><span style="color:#e36209;--shiki-dark:#FFAB70"> oklab</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">var</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#e36209;--shiki-dark:#FFAB70">--accent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">) </span><span style="color:#005cc5;--shiki-dark:#79B8FF">18</span><span style="color:#d73a49;--shiki-dark:#F97583">%</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">transparent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre><p>如果你希望继续保留 Hermes Agent 暗色主题，可以把暗色 accent 替换为：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">[</span><span style="color:#6f42c1;--shiki-dark:#B392F0">data-theme</span><span style="color:#d73a49;--shiki-dark:#F97583">=</span><span style="color:#032f62;--shiki-dark:#9ECBFF">"dark"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">] {</span></span>
+<span class="line"><span style="color:#e36209;--shiki-dark:#FFAB70">  --accent</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">#7c3aed</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre><p>但第一版建议先学习 <a href="http://steipete.me">steipete.me</a> 的蓝灰底 + 橙色 accent，因为它的个人站辨识度更强。</p><h3>3.3 字体系统</h3><p><a href="http://steipete.me">steipete.me</a> 使用 Atkinson 字体文件，并让整体界面带有 mono 气质。本项目建议用“可维护 + 不拖慢中文”的方式吸收它：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">@font-face</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-family</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"Atkinson"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  src</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">url</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">"/fonts/atkinson-regular.woff2"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">) </span><span style="color:#005cc5;--shiki-dark:#79B8FF">format</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">"woff2"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-weight</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">400</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-style</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">normal</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-display</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">swap</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">@font-face</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-family</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"Atkinson"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  src</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">url</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">"/fonts/atkinson-bold.woff2"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">) </span><span style="color:#005cc5;--shiki-dark:#79B8FF">format</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">"woff2"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-weight</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">700</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-style</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">normal</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-display</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">swap</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">body</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-family</span><span style="color:#24292e;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#032f62;--shiki-dark:#9ECBFF">    "Atkinson"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">ui-monospace</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, SFMono-Regular, Menlo, Monaco, Consolas,</span></span>
+<span class="line"><span style="color:#032f62;--shiki-dark:#9ECBFF">    "Microsoft YaHei UI"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"Microsoft YaHei"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">sans-serif</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">.prose</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-family</span><span style="color:#24292e;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#032f62;--shiki-dark:#9ECBFF">    "Atkinson"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">ui-sans-serif</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">system-ui</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">-apple-system</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, BlinkMacSystemFont,</span></span>
+<span class="line"><span style="color:#032f62;--shiki-dark:#9ECBFF">    "Segoe UI"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"Microsoft YaHei UI"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"Microsoft YaHei"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">sans-serif</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">code</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#22863a;--shiki-dark:#85E89D">pre</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#22863a;--shiki-dark:#85E89D">kbd</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  font-family</span><span style="color:#24292e;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#032f62;--shiki-dark:#9ECBFF">    "Geist Mono"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"JetBrains Mono"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">ui-monospace</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    SFMono-Regular, Menlo, Monaco, Consolas, </span><span style="color:#005cc5;--shiki-dark:#79B8FF">monospace</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre><p>字体维护规则：</p><ul><li>英文字体可以本地托管 Atkinson woff2，放在 <code>site/public/fonts/</code>。</li><li>不加载全量中文 webfont，避免首屏和长文性能被字体拖垮。</li><li>中文靠系统字体、字号、行高和留白建立质感。</li><li>如果发现 Atkinson 对中文混排不够稳，正文 <code>.prose</code> 可切回系统 sans，导航和元信息继续使用 Atkinson/mono。</li><li>字体选择写入 <code>docs/design-reference-steipete.md</code>，不要只存在于 CSS 里。</li></ul><h3>3.4 微交互</h3><p>保留：</p><ul><li>链接 hover underline。</li><li>文章卡片 hover 边框和背景变化。</li><li>主题切换过渡。</li><li>阅读进度条。</li><li>代码复制反馈。</li><li>TOC 当前章节高亮。</li></ul><p>禁止：</p><ul><li>粒子背景。</li><li>大光标。</li><li>大面积视差滚动。</li><li>大量毛玻璃。</li><li>复杂动画库。</li></ul><hr><h2>4. 技术选型</h2><h3>4.1 为什么不用前端运行时框架</h3><p>博客是内容展示，不是复杂交互应用。</p><p>React/Vue/Svelte 的优势：</p><ul><li>状态管理。</li><li>组件化交互。</li><li>动态应用。</li></ul><p>本项目不需要这些运行时能力。</p><p>不用它们的收益：</p><ul><li>无 hydration。</li><li>无运行时 bundle。</li><li>页面加载更快。</li><li>出错面更小。</li><li>Nginx 静态服务即可。</li></ul><h3>4.2 为什么允许构建期工具</h3><p>构建期工具不会增加浏览器运行成本。</p><p>构建期可以做：</p><ul><li>Markdown 转 HTML。</li><li>代码高亮。</li><li>图片压缩。</li><li>CSS/JS 压缩。</li><li>RSS/Sitemap 生成。</li></ul><p>运行时只展示结果。</p><h3>4.3 技术清单</h3><table><thead><tr><th>类型</th><th>工具</th><th>说明</th></tr></thead><tbody><tr><td>运行时</td><td>Node.js 22</td><td>构建器运行</td></tr><tr><td>包管理</td><td>pnpm</td><td>快速、稳定</td></tr><tr><td>Markdown</td><td>markdown-it</td><td>Markdown 转 HTML</td></tr><tr><td>元数据</td><td>gray-matter</td><td>frontmatter</td></tr><tr><td>代码高亮</td><td>Shiki</td><td>构建期高亮</td></tr><tr><td>图片优化</td><td>Sharp</td><td>WebP/AVIF/尺寸</td></tr><tr><td>JS 构建</td><td>esbuild</td><td>压缩 main.js</td></tr><tr><td>CSS 构建</td><td>Lightning CSS</td><td>压缩 CSS</td></tr><tr><td>HTML 压缩</td><td>html-minifier-terser</td><td>压缩 HTML</td></tr><tr><td>本机服务</td><td>Nginx for Windows</td><td>静态部署</td></tr><tr><td>E2E</td><td>Playwright</td><td>自动化测试</td></tr><tr><td>调试</td><td>Chrome DevTools MCP</td><td>console/network/performance</td></tr></tbody></table><hr><h2>5. Windows 原生开发系统方案</h2><h3>5.1 环境边界</h3><p>本项目明确要求：全部在 Windows 原生环境下开发。</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>Windows 原生环境负责全部工作：</span></span>
+<span class="line"><span>  - VS Code / Cursor</span></span>
+<span class="line"><span>  - Chrome</span></span>
+<span class="line"><span>  - 文件管理</span></span>
+<span class="line"><span>  - 设计工具</span></span>
+<span class="line"><span>  - Git for Windows</span></span>
+<span class="line"><span>  - Node.js Windows 版</span></span>
+<span class="line"><span>  - pnpm</span></span>
+<span class="line"><span>  - Nginx for Windows</span></span>
+<span class="line"><span>  - PowerShell 7 / Windows Terminal</span></span>
+<span class="line"><span>  - Playwright</span></span>
+<span class="line"><span>  - Chrome DevTools MCP</span></span>
+<span class="line"><span></span></span></code></pre><h3>5.2 项目目录建议</h3><p>推荐放在 D 盘工作区：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>D:\workspace\minimal-blog</span></span>
+<span class="line"><span></span></span></code></pre><p>约束：</p><ul><li>不使用 <code>/home/...</code>。</li><li>不使用 Linux shell 脚本作为部署入口。</li><li>所有命令默认在 PowerShell 7 中执行。</li></ul><p>建议：</p><ul><li>用 Windows Terminal + PowerShell 7 运行 <code>pnpm</code>、<code>nginx.exe</code>、<code>playwright</code>。</li><li>Nginx 配置里的路径统一使用正斜杠：<code>D:/workspace/minimal-blog/dist</code>。</li></ul><h3>5.3 环境安装命令</h3><p>PowerShell 7 中：</p><pre><code class="language-powershell">node --version
+npm --version
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm --version
+git --version
+nginx -v
+</code></pre><p>推荐安装方式：</p><pre><code class="language-powershell">winget install OpenJS.NodeJS.LTS
+winget install Git.Git
+winget install Microsoft.PowerShell
+winget install Google.Chrome
+</code></pre><p>Nginx for Windows 建议从官网 zip 包安装到：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>C:\tools\nginx</span></span>
+<span class="line"><span></span></span></code></pre><p>Playwright：</p><pre><code class="language-powershell">pnpm add -D playwright
+pnpm exec playwright install chromium
+</code></pre><hr><h2>6. 工程结构</h2><p>最终结构：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>minimal-blog/</span></span>
+<span class="line"><span>  core/</span></span>
+<span class="line"><span>    content/</span></span>
+<span class="line"><span>      loadPosts.js</span></span>
+<span class="line"><span>      loadPages.js</span></span>
+<span class="line"><span>      validateFrontmatter.js</span></span>
+<span class="line"><span>      readingTime.js</span></span>
+<span class="line"><span>    markdown/</span></span>
+<span class="line"><span>      createMarkdownRenderer.js</span></span>
+<span class="line"><span>      renderMarkdown.js</span></span>
+<span class="line"><span>      extractToc.js</span></span>
+<span class="line"><span>    template/</span></span>
+<span class="line"><span>      renderLayout.js</span></span>
+<span class="line"><span>      renderHome.js</span></span>
+<span class="line"><span>      renderPost.js</span></span>
+<span class="line"><span>      renderArchive.js</span></span>
+<span class="line"><span>      renderAbout.js</span></span>
+<span class="line"><span>      renderMeta.js</span></span>
+<span class="line"><span>    assets/</span></span>
+<span class="line"><span>      buildCss.js</span></span>
+<span class="line"><span>      buildJs.js</span></span>
+<span class="line"><span>      buildImages.js</span></span>
+<span class="line"><span>      copyPublic.js</span></span>
+<span class="line"><span>    output/</span></span>
+<span class="line"><span>      writePage.js</span></span>
+<span class="line"><span>      writeRss.js</span></span>
+<span class="line"><span>      writeSitemap.js</span></span>
+<span class="line"><span>      cleanDist.js</span></span>
+<span class="line"><span>    utils/</span></span>
+<span class="line"><span>      paths.js</span></span>
+<span class="line"><span>      dates.js</span></span>
+<span class="line"><span>      escapeHtml.js</span></span>
+<span class="line"><span>      slug.js</span></span>
+<span class="line"><span>  site/</span></span>
+<span class="line"><span>    site.config.js</span></span>
+<span class="line"><span>    content/</span></span>
+<span class="line"><span>      posts/</span></span>
+<span class="line"><span>        2026-hello-world.md</span></span>
+<span class="line"><span>      pages/</span></span>
+<span class="line"><span>        about.md</span></span>
+<span class="line"><span>    styles/</span></span>
+<span class="line"><span>      reset.css</span></span>
+<span class="line"><span>      tokens.css</span></span>
+<span class="line"><span>      base.css</span></span>
+<span class="line"><span>      layout.css</span></span>
+<span class="line"><span>      prose.css</span></span>
+<span class="line"><span>      components.css</span></span>
+<span class="line"><span>      utilities.css</span></span>
+<span class="line"><span>    scripts/</span></span>
+<span class="line"><span>      main.js</span></span>
+<span class="line"><span>      modules/</span></span>
+<span class="line"><span>        theme.js</span></span>
+<span class="line"><span>        readingProgress.js</span></span>
+<span class="line"><span>        copyCode.js</span></span>
+<span class="line"><span>        tocSpy.js</span></span>
+<span class="line"><span>    public/</span></span>
+<span class="line"><span>      favicon.svg</span></span>
+<span class="line"><span>      robots.txt</span></span>
+<span class="line"><span>      fonts/</span></span>
+<span class="line"><span>        atkinson-regular.woff2</span></span>
+<span class="line"><span>        atkinson-bold.woff2</span></span>
+<span class="line"><span>  docs/</span></span>
+<span class="line"><span>    architecture.md</span></span>
+<span class="line"><span>    design-reference-steipete.md</span></span>
+<span class="line"><span>    maintainability.md</span></span>
+<span class="line"><span>    performance-checklist.md</span></span>
+<span class="line"><span>  nginx/</span></span>
+<span class="line"><span>    minimal-blog.conf</span></span>
+<span class="line"><span>  scripts/</span></span>
+<span class="line"><span>    build.js</span></span>
+<span class="line"><span>    dev.js</span></span>
+<span class="line"><span>    deploy-local.ps1</span></span>
+<span class="line"><span>    check-dist.js</span></span>
+<span class="line"><span>  tests/</span></span>
+<span class="line"><span>    smoke.spec.js</span></span>
+<span class="line"><span>    performance.spec.js</span></span>
+<span class="line"><span>  dist/</span></span>
+<span class="line"><span>  package.json</span></span>
+<span class="line"><span>  README.md</span></span>
+<span class="line"><span></span></span></code></pre><p>关键原则：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core 不知道具体站点审美</span></span>
+<span class="line"><span>site 不负责底层构建逻辑</span></span>
+<span class="line"><span>scripts 只编排，不堆业务逻辑</span></span>
+<span class="line"><span>docs 记录设计、架构、维护规则，方便后期自己或 AI agent 接手</span></span>
+<span class="line"><span></span></span></code></pre><p>可维护性要求：</p><ol><li><code>core/</code> 中不允许出现具体颜色、站点名称、Windows 绝对路径。</li><li><code>site/styles/tokens.css</code> 是视觉系统入口，主题变化优先改 token。</li><li><code>site/scripts/main.js</code> 只负责初始化，具体交互拆到 <code>site/scripts/modules/</code>。</li><li>模板函数必须保持输入输出清楚，例如：</li></ol><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">renderLayout</span><span style="color:#24292e;--shiki-dark:#E1E4E8">({ site, page, content })</span></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">renderPost</span><span style="color:#24292e;--shiki-dark:#E1E4E8">({ site, post, html, toc })</span></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">renderPostList</span><span style="color:#24292e;--shiki-dark:#E1E4E8">({ posts, variant })</span></span>
+<span class="line"></span></code></pre><ol start="5"><li>后期新增功能按插件式 pipeline 接入，不直接改穿核心流程。</li></ol><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>load content</span></span>
+<span class="line"><span>→ validate schema</span></span>
+<span class="line"><span>→ transform markdown</span></span>
+<span class="line"><span>→ render templates</span></span>
+<span class="line"><span>→ optimize assets</span></span>
+<span class="line"><span>→ emit dist</span></span>
+<span class="line"><span>→ verify dist</span></span>
+<span class="line"><span></span></span></code></pre><hr><h2>7. 站点配置设计</h2><p><code>site/site.config.js</code>：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">export</span><span style="color:#d73a49;--shiki-dark:#F97583"> default</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  title: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'Minimal Blog'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  description: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'A fast, minimal, local-first writing site.'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  language: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'zh-CN'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  baseUrl: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'http://localhost:8088'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  author: {</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    name: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'Your Name'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    url: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'http://localhost:8088/about/'</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  routes: {</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    posts: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'/posts'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    archive: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'/archive'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    about: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'/about'</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  build: {</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    postsPerHomePage: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">12</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    generateTags: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">false</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    minifyHtml: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">true</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  design: {</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    reference: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'steipete.me'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    container: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'48rem'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    fontProfile: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'atkinson-mono-readable'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">    motion: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'subtle'</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">};</span></span>
+<span class="line"></span></code></pre><p>后续复用时，只替换：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>site/site.config.js</span></span>
+<span class="line"><span>site/content/</span></span>
+<span class="line"><span>site/styles/</span></span>
+<span class="line"><span>site/public/</span></span>
+<span class="line"><span></span></span></code></pre><hr><h2>8. 内容 schema</h2><p>文章 frontmatter：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">title</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"第一篇文章"</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">slug</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"hello-world"</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">date</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"2026-06-05"</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">description</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"文章摘要。"</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">tags</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: [</span><span style="color:#032f62;--shiki-dark:#9ECBFF">design</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#032f62;--shiki-dark:#9ECBFF">coding</span><span style="color:#24292e;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">draft</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">false</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">featured</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">true</span></span>
+<span class="line"><span style="color:#22863a;--shiki-dark:#85E89D">cover</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"/images/cover.jpg"</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">---</span></span>
+<span class="line"></span></code></pre><p>必填字段：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>title</span></span>
+<span class="line"><span>slug</span></span>
+<span class="line"><span>date</span></span>
+<span class="line"><span>description</span></span>
+<span class="line"><span></span></span></code></pre><p>可选字段：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>tags</span></span>
+<span class="line"><span>draft</span></span>
+<span class="line"><span>featured</span></span>
+<span class="line"><span>cover</span></span>
+<span class="line"><span>updated</span></span>
+<span class="line"><span></span></span></code></pre><p>构建时必须校验：</p><ul><li>title 非空。</li><li>slug 唯一。</li><li>date 合法。</li><li>draft 为 boolean。</li><li>description 不超过合理长度。</li></ul><hr><h2>9. 构建流程</h2><p><code>scripts/build.js</code> 负责编排：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>1. 读取 site config</span></span>
+<span class="line"><span>2. 创建路径上下文</span></span>
+<span class="line"><span>3. 清空 dist</span></span>
+<span class="line"><span>4. 加载文章和页面</span></span>
+<span class="line"><span>5. 校验 frontmatter</span></span>
+<span class="line"><span>6. Markdown 渲染</span></span>
+<span class="line"><span>7. 提取 TOC</span></span>
+<span class="line"><span>8. 生成首页</span></span>
+<span class="line"><span>9. 生成文章页</span></span>
+<span class="line"><span>10. 生成归档页</span></span>
+<span class="line"><span>11. 生成关于页</span></span>
+<span class="line"><span>12. 构建 CSS</span></span>
+<span class="line"><span>13. 构建 JS</span></span>
+<span class="line"><span>14. 优化图片</span></span>
+<span class="line"><span>15. 复制 public</span></span>
+<span class="line"><span>16. 生成 RSS</span></span>
+<span class="line"><span>17. 生成 Sitemap</span></span>
+<span class="line"><span>18. 压缩 HTML</span></span>
+<span class="line"><span>19. 输出构建报告</span></span>
+<span class="line"><span></span></span></code></pre><p>构建报告建议包含：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>Posts: 12</span></span>
+<span class="line"><span>Pages: 1</span></span>
+<span class="line"><span>CSS: 9.2KB gzip</span></span>
+<span class="line"><span>JS: 4.1KB gzip</span></span>
+<span class="line"><span>Images optimized: 8</span></span>
+<span class="line"><span>Output: dist/</span></span>
+<span class="line"><span>Build time: 830ms</span></span>
+<span class="line"><span></span></span></code></pre><hr><h2>10. Nginx for Windows 本机部署方案</h2><h3>10.1 Nginx 配置</h3><p><code>nginx/minimal-blog.conf</code>：</p><pre><code class="language-nginx">server {
+  listen 8088;
+  server_name localhost;
+
+  root D:/workspace/minimal-blog/dist;
+  index index.html;
+
+  charset utf-8;
+
+  gzip on;
+  gzip_comp_level 6;
+  gzip_min_length 1024;
+  gzip_types
+    text/plain
+    text/css
+    application/javascript
+    application/json
+    application/xml
+    image/svg+xml;
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  location ~* \.(css|js|png|jpg|jpeg|gif|webp|avif|svg|woff2)$ {
+    expires 30d;
+    add_header Cache-Control &quot;public, max-age=2592000, immutable&quot;;
+  }
+
+  location ~* \.(html|xml|txt)$ {
+    add_header Cache-Control &quot;no-cache&quot;;
+  }
+}
+</code></pre><h3>10.2 启用 Nginx 配置</h3><pre><code class="language-powershell">Copy-Item .\nginx\minimal-blog.conf C:\tools\nginx\conf\conf.d\minimal-blog.conf
+cd C:\tools\nginx
+.\nginx.exe -t
+.\nginx.exe -s reload
+</code></pre><p>如果 Nginx 尚未启动：</p><pre><code class="language-powershell">cd C:\tools\nginx
+start .\nginx.exe
+</code></pre><p>访问：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>http://localhost:8088</span></span>
+<span class="line"><span></span></span></code></pre><h3>10.3 部署脚本</h3><p><code>scripts/deploy-local.ps1</code>：</p><pre><code class="language-powershell">pnpm build
+Set-Location C:\tools\nginx
+.\nginx.exe -t
+.\nginx.exe -s reload
+curl.exe -I http://localhost:8088
+</code></pre><hr><h2>11. 开发流程</h2><h3>11.1 初始化</h3><pre><code class="language-powershell">New-Item -ItemType Directory -Force D:\workspace\minimal-blog | Out-Null
+Set-Location D:\workspace\minimal-blog
+pnpm init
+pnpm add -D fast-glob gray-matter markdown-it shiki sharp esbuild lightningcss html-minifier-terser chokidar serve playwright
+New-Item -ItemType Directory -Force core\content,core\markdown,core\template,core\assets,core\output,core\utils | Out-Null
+New-Item -ItemType Directory -Force site\content\posts,site\content\pages,site\styles,site\scripts,site\public | Out-Null
+New-Item -ItemType Directory -Force nginx,scripts,tests,dist | Out-Null
+</code></pre><h3>11.2 package.json</h3><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  "type"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"module"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">  "scripts"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">    "build"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"node scripts/build.js"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">    "dev"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"node scripts/dev.js"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">    "preview"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"serve dist -l 8088"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">    "deploy:local"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"powershell -ExecutionPolicy Bypass -File scripts/deploy-local.ps1"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">    "test:e2e"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"playwright test"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005cc5;--shiki-dark:#79B8FF">    "check"</span><span style="color:#24292e;--shiki-dark:#E1E4E8">: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">"node scripts/check-dist.js"</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre><h3>11.3 开发循环</h3><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>写 Markdown / 改 CSS / 改模板</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>pnpm build</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>pnpm preview 或 Nginx 访问</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>Chrome DevTools 检查</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>Playwright smoke test</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>修复问题</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>commit</span></span>
+<span class="line"><span></span></span></code></pre><hr><h2>12. 测试方案</h2><h3>12.1 Playwright smoke test</h3><p><code>tests/smoke.spec.js</code>：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">import</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> { test, expect } </span><span style="color:#d73a49;--shiki-dark:#F97583">from</span><span style="color:#032f62;--shiki-dark:#9ECBFF"> '@playwright/test'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">const</span><span style="color:#005cc5;--shiki-dark:#79B8FF"> baseUrl</span><span style="color:#d73a49;--shiki-dark:#F97583"> =</span><span style="color:#032f62;--shiki-dark:#9ECBFF"> 'http://localhost:8088'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">test</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'home page renders'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#d73a49;--shiki-dark:#F97583">async</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> ({ </span><span style="color:#e36209;--shiki-dark:#FFAB70">page</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> }) </span><span style="color:#d73a49;--shiki-dark:#F97583">=></span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">  await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">goto</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(baseUrl);</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">  await</span><span style="color:#6f42c1;--shiki-dark:#B392F0"> expect</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">locator</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'body'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">)).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">toBeVisible</span><span style="color:#24292e;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">  await</span><span style="color:#6f42c1;--shiki-dark:#B392F0"> expect</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(page).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">toHaveTitle</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">/</span><span style="color:#032f62;--shiki-dark:#DBEDFF">Minimal Blog</span><span style="color:#032f62;--shiki-dark:#9ECBFF">/</span><span style="color:#d73a49;--shiki-dark:#F97583">i</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">test</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'no console errors on home'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#d73a49;--shiki-dark:#F97583">async</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> ({ </span><span style="color:#e36209;--shiki-dark:#FFAB70">page</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> }) </span><span style="color:#d73a49;--shiki-dark:#F97583">=></span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">  const</span><span style="color:#005cc5;--shiki-dark:#79B8FF"> errors</span><span style="color:#d73a49;--shiki-dark:#F97583"> =</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> [];</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">on</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'console'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#e36209;--shiki-dark:#FFAB70">msg</span><span style="color:#d73a49;--shiki-dark:#F97583"> =></span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">    if</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> (msg.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">type</span><span style="color:#24292e;--shiki-dark:#E1E4E8">() </span><span style="color:#d73a49;--shiki-dark:#F97583">===</span><span style="color:#032f62;--shiki-dark:#9ECBFF"> 'error'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">) errors.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">push</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(msg.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">text</span><span style="color:#24292e;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">  });</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">  await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">goto</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(baseUrl);</span></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">  expect</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(errors).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">toEqual</span><span style="color:#24292e;--shiki-dark:#E1E4E8">([]);</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">test</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'rss and sitemap exist'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#d73a49;--shiki-dark:#F97583">async</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> ({ </span><span style="color:#e36209;--shiki-dark:#FFAB70">request</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> }) </span><span style="color:#d73a49;--shiki-dark:#F97583">=></span><span style="color:#24292e;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">  expect</span><span style="color:#24292e;--shiki-dark:#E1E4E8">((</span><span style="color:#d73a49;--shiki-dark:#F97583">await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> request.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">get</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">`${</span><span style="color:#24292e;--shiki-dark:#E1E4E8">baseUrl</span><span style="color:#032f62;--shiki-dark:#9ECBFF">}/rss.xml`</span><span style="color:#24292e;--shiki-dark:#E1E4E8">)).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">ok</span><span style="color:#24292e;--shiki-dark:#E1E4E8">()).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">toBeTruthy</span><span style="color:#24292e;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#6f42c1;--shiki-dark:#B392F0">  expect</span><span style="color:#24292e;--shiki-dark:#E1E4E8">((</span><span style="color:#d73a49;--shiki-dark:#F97583">await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> request.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">get</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">`${</span><span style="color:#24292e;--shiki-dark:#E1E4E8">baseUrl</span><span style="color:#032f62;--shiki-dark:#9ECBFF">}/sitemap.xml`</span><span style="color:#24292e;--shiki-dark:#E1E4E8">)).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">ok</span><span style="color:#24292e;--shiki-dark:#E1E4E8">()).</span><span style="color:#6f42c1;--shiki-dark:#B392F0">toBeTruthy</span><span style="color:#24292e;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">});</span></span>
+<span class="line"></span></code></pre><h3>12.2 构建检查</h3><p><code>scripts/check-dist.js</code> 检查：</p><ul><li><code>dist/index.html</code> 存在。</li><li><code>dist/rss.xml</code> 存在。</li><li><code>dist/sitemap.xml</code> 存在。</li><li><code>dist/assets/main.css</code> 存在。</li><li><code>dist/assets/main.js</code> 存在。</li><li>JS/CSS 大小未超预算。</li></ul><p>预算：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>main.js gzip &#x3C; 8KB</span></span>
+<span class="line"><span>main.css gzip &#x3C; 15KB</span></span>
+<span class="line"><span></span></span></code></pre><hr><h2>13. Chrome DevTools 调试流程</h2><p>配置 Chrome DevTools MCP 后，调试流程：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>1. pnpm build</span></span>
+<span class="line"><span>2. pnpm deploy:local 或启动 Nginx</span></span>
+<span class="line"><span>3. 打开 http://localhost:8088</span></span>
+<span class="line"><span>4. 查看 console messages</span></span>
+<span class="line"><span>5. 查看 network requests</span></span>
+<span class="line"><span>6. 截图</span></span>
+<span class="line"><span>7. Lighthouse audit</span></span>
+<span class="line"><span>8. Performance trace</span></span>
+<span class="line"><span>9. 修改代码</span></span>
+<span class="line"><span>10. 重新 build</span></span>
+<span class="line"><span>11. 再验证</span></span>
+<span class="line"><span></span></span></code></pre><p>如果 MCP 当前不可用，用 Playwright 替代：</p><pre><code class="language-powershell">pnpm exec playwright test
+</code></pre><p>或写临时脚本：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">import</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> { chromium } </span><span style="color:#d73a49;--shiki-dark:#F97583">from</span><span style="color:#032f62;--shiki-dark:#9ECBFF"> 'playwright'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">const</span><span style="color:#005cc5;--shiki-dark:#79B8FF"> browser</span><span style="color:#d73a49;--shiki-dark:#F97583"> =</span><span style="color:#d73a49;--shiki-dark:#F97583"> await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> chromium.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">launch</span><span style="color:#24292e;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">const</span><span style="color:#005cc5;--shiki-dark:#79B8FF"> page</span><span style="color:#d73a49;--shiki-dark:#F97583"> =</span><span style="color:#d73a49;--shiki-dark:#F97583"> await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> browser.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">newPage</span><span style="color:#24292e;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">on</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'console'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#e36209;--shiki-dark:#FFAB70">msg</span><span style="color:#d73a49;--shiki-dark:#F97583"> =></span><span style="color:#24292e;--shiki-dark:#E1E4E8"> console.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">log</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(msg.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">type</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(), msg.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">text</span><span style="color:#24292e;--shiki-dark:#E1E4E8">()));</span></span>
+<span class="line"><span style="color:#24292e;--shiki-dark:#E1E4E8">page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">on</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'pageerror'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, </span><span style="color:#e36209;--shiki-dark:#FFAB70">err</span><span style="color:#d73a49;--shiki-dark:#F97583"> =></span><span style="color:#24292e;--shiki-dark:#E1E4E8"> console.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">error</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(err));</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">goto</span><span style="color:#24292e;--shiki-dark:#E1E4E8">(</span><span style="color:#032f62;--shiki-dark:#9ECBFF">'http://localhost:8088'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> page.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">screenshot</span><span style="color:#24292e;--shiki-dark:#E1E4E8">({ path: </span><span style="color:#032f62;--shiki-dark:#9ECBFF">'debug-home.png'</span><span style="color:#24292e;--shiki-dark:#E1E4E8">, fullPage: </span><span style="color:#005cc5;--shiki-dark:#79B8FF">true</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> });</span></span>
+<span class="line"><span style="color:#d73a49;--shiki-dark:#F97583">await</span><span style="color:#24292e;--shiki-dark:#E1E4E8"> browser.</span><span style="color:#6f42c1;--shiki-dark:#B392F0">close</span><span style="color:#24292e;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"></span></code></pre><hr><h2>14. 详细落地任务</h2><h3>Task 1：产品说明文档</h3><p>目标：写清楚软件目标和边界。</p><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>README.md</span></span>
+<span class="line"><span>docs/product.md</span></span>
+<span class="line"><span></span></span></code></pre><p>内容：</p><ul><li>产品目标。</li><li>第一版功能。</li><li>非目标。</li><li>架构原则。</li></ul><p>验收：产品边界清楚。</p><hr><h3>Task 2：初始化工程</h3><p>目标：创建 core + site 结构。</p><p>命令：</p><pre><code class="language-powershell">New-Item -ItemType Directory -Force D:\workspace\minimal-blog | Out-Null
+Set-Location D:\workspace\minimal-blog
+pnpm init
+New-Item -ItemType Directory -Force core\content,core\markdown,core\template,core\assets,core\output,core\utils | Out-Null
+New-Item -ItemType Directory -Force site\content\posts,site\content\pages,site\styles,site\scripts,site\public | Out-Null
+New-Item -ItemType Directory -Force nginx,scripts,tests,dist,docs | Out-Null
+</code></pre><p>验收：目录完整。</p><hr><h3>Task 3：安装依赖</h3><p>命令：</p><pre><code class="language-powershell">pnpm add -D fast-glob gray-matter markdown-it shiki sharp esbuild lightningcss html-minifier-terser chokidar serve playwright
+</code></pre><p>验收：<code>pnpm-lock.yaml</code> 生成。</p><hr><h3>Task 4：站点配置</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>site/site.config.js</span></span>
+<span class="line"><span></span></span></code></pre><p>验收：构建器可以 import 配置。</p><hr><h3>Task 5：文章加载模块</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core/content/loadPosts.js</span></span>
+<span class="line"><span>core/content/validateFrontmatter.js</span></span>
+<span class="line"><span></span></span></code></pre><p>功能：</p><ul><li>读取 Markdown。</li><li>解析 frontmatter。</li><li>校验字段。</li><li>排序。</li></ul><p>验收：能打印文章对象数组。</p><hr><h3>Task 6：Markdown 渲染模块</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core/markdown/createMarkdownRenderer.js</span></span>
+<span class="line"><span>core/markdown/renderMarkdown.js</span></span>
+<span class="line"><span>core/markdown/extractToc.js</span></span>
+<span class="line"><span></span></span></code></pre><p>功能：</p><ul><li>Markdown 转 HTML。</li><li>Shiki 代码高亮。</li><li>提取 heading TOC。</li></ul><p>验收：文章正文 HTML 正确。</p><hr><h3>Task 7：模板模块</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core/template/renderLayout.js</span></span>
+<span class="line"><span>core/template/renderHome.js</span></span>
+<span class="line"><span>core/template/renderPost.js</span></span>
+<span class="line"><span>core/template/renderArchive.js</span></span>
+<span class="line"><span>core/template/renderAbout.js</span></span>
+<span class="line"><span>core/template/renderMeta.js</span></span>
+<span class="line"><span></span></span></code></pre><p>功能：</p><ul><li>统一 layout。</li><li>输出 SEO meta。</li><li>渲染首页/文章页/归档页。</li></ul><p>验收：生成可打开 HTML。</p><hr><h3>Task 8：资源构建模块</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core/assets/buildCss.js</span></span>
+<span class="line"><span>core/assets/buildJs.js</span></span>
+<span class="line"><span>core/assets/buildImages.js</span></span>
+<span class="line"><span>core/assets/copyPublic.js</span></span>
+<span class="line"><span></span></span></code></pre><p>功能：</p><ul><li>合并 CSS。</li><li>压缩 CSS。</li><li>压缩 JS。</li><li>图片 WebP/AVIF。</li><li>复制 public。</li></ul><p>验收：dist/assets 生成。</p><hr><h3>Task 9：RSS 和 Sitemap</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core/output/writeRss.js</span></span>
+<span class="line"><span>core/output/writeSitemap.js</span></span>
+<span class="line"><span></span></span></code></pre><p>验收：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>dist/rss.xml</span></span>
+<span class="line"><span>dist/sitemap.xml</span></span>
+<span class="line"><span></span></span></code></pre><p>存在且可访问。</p><hr><h3>Task 10：Nginx for Windows 部署</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>nginx/minimal-blog.conf</span></span>
+<span class="line"><span>scripts/deploy-local.ps1</span></span>
+<span class="line"><span></span></span></code></pre><p>验收：</p><pre><code class="language-powershell">pnpm deploy:local
+curl.exe -I http://localhost:8088
+</code></pre><p>返回 200。</p><hr><h3>Task 11：测试和性能验收</h3><p>文件：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>tests/smoke.spec.js</span></span>
+<span class="line"><span>tests/performance.spec.js</span></span>
+<span class="line"><span>scripts/check-dist.js</span></span>
+<span class="line"><span></span></span></code></pre><p>验收：</p><pre><code class="language-powershell">pnpm check
+pnpm test:e2e
+</code></pre><p>全部通过。</p><hr><h2>15. 交付标准</h2><p>最终交付时，项目必须满足：</p><ul><li>[ ] Windows 原生环境可开发。</li><li>[ ] <code>pnpm build</code> 成功。</li><li>[ ] <code>dist/</code> 静态产物完整。</li><li>[ ] Nginx for Windows 本机部署成功。</li><li>[ ] 首页可访问。</li><li>[ ] 文章页可访问。</li><li>[ ] 归档页可访问。</li><li>[ ] RSS 可访问。</li><li>[ ] Sitemap 可访问。</li><li>[ ] JS gzip &lt; 8KB。</li><li>[ ] CSS gzip &lt; 15KB。</li><li>[ ] console 无 error。</li><li>[ ] network 无异常 404/500。</li><li>[ ] Lighthouse Performance ≥ 95。</li><li>[ ] core 和 site 分离清楚。</li><li>[ ] 换 site 配置不需要改 core。</li></ul><hr><h2>16. 后续复用路线</h2><h3>阶段 1：单项目复用</h3><p>复制整个项目，替换：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>site/site.config.js</span></span>
+<span class="line"><span>site/content/</span></span>
+<span class="line"><span>site/styles/</span></span>
+<span class="line"><span>site/public/</span></span>
+<span class="line"><span></span></span></code></pre><h3>阶段 2：多站点复用</h3><p>结构升级：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>minimal-blog-platform/</span></span>
+<span class="line"><span>  core/</span></span>
+<span class="line"><span>  sites/</span></span>
+<span class="line"><span>    personal-blog/</span></span>
+<span class="line"><span>    docs-site/</span></span>
+<span class="line"><span>    portfolio/</span></span>
+<span class="line"><span></span></span></code></pre><p>构建命令：</p><pre><code class="language-powershell">pnpm build --site personal-blog
+pnpm build --site docs-site
+</code></pre><h3>阶段 3：内部 npm 包</h3><p>当 core 在 2-3 个站点复用后，再考虑：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>packages/blog-core</span></span>
+<span class="line"><span></span></span></code></pre><p>不要第一版就 npm 包化，容易过早抽象。</p><hr><h2>17. 最终判断</h2><p>这个方案不使用前端运行时框架是可行的。</p><p>关键不是“完全不用工具”，而是：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>构建期可以复杂</span></span>
+<span class="line"><span>运行时必须简单</span></span>
+<span class="line"><span></span></span></code></pre><p>正确边界：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>允许 Node 构建工具</span></span>
+<span class="line"><span>允许 Markdown/图片/CSS/JS 构建期处理</span></span>
+<span class="line"><span>不允许浏览器端框架运行时</span></span>
+<span class="line"><span>不允许浏览器端 Markdown 解析</span></span>
+<span class="line"><span>不允许为了炫技增加动画库</span></span>
+<span class="line"><span></span></span></code></pre><p>最终形态：</p><pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span>core + site</span></span>
+<span class="line"><span>→ build</span></span>
+<span class="line"><span>→ dist</span></span>
+<span class="line"><span>→ Nginx localhost:8088</span></span>
+<span class="line"><span></span></span></code></pre><p>这是本机部署、性能、审美、可复用性之间最稳的折中。</p></div><footer class="post-footer"><nav class="post-nav"><a href="/posts/platform-sutra-interpretation-1.html" class="post-nav-prev">← 六祖坛经解译：直指人心的智慧</a> <a href="/posts/platform-sutra-interpretation.html" class="post-nav-next">极简高性能博客软件总体 Phase 计划 →</a></nav></footer></article></main><footer class="site-footer"><div class="footer-inner"><div class="footer-links"><a href="/rss.xml">RSS Feed</a> <a href="https://github.com" target="_blank" rel="noopener">GitHub</a> <a href="http://localhost:8088/about/">About</a></div><div class="footer-meta">© 2026 Chuckle · <a href="/sitemap.xml">Sitemap</a></div></div></footer><script src="/assets/main.js" type="module" defer="defer"></script></body></html>
