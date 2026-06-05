@@ -12,6 +12,7 @@ import { escapeAttr } from '../utils/escapeHtml.js';
  * @returns {string}
  */
 export function renderArchive({ posts, site }) {
+  const bp = site.basePath || '';
   const grouped = groupByYear(posts);
   const years = Array.from(grouped.keys()).sort((a, b) => b - a);
 
@@ -35,7 +36,7 @@ export function renderArchive({ posts, site }) {
             (post) => `
         <li>
           <time datetime="${post.date.toISOString().split('T')[0]}">${formatDate(post.date, 'iso')}</time>
-          <a href="/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
+          <a href="${bp}/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
         </li>`
           )
           .join('')}

@@ -8,11 +8,11 @@ import { escapeAttr } from '../utils/escapeHtml.js';
  * 生成首页主体内容
  */
 export function renderHome({ posts, site }) {
+  const bp = site.basePath || '';
   const recent = posts.slice(0, site.build?.postsPerHomePage || 12);
 
   return `
 <main class="home">
-  <!-- Hero -->
   <section class="hero">
     <h1 class="hero-title">Hi, I'm ${escapeHtml(site.author?.handle || site.author?.name || site.title)}</h1>
     <p class="hero-subtitle">${escapeHtml(site.description)}</p>
@@ -20,9 +20,8 @@ export function renderHome({ posts, site }) {
 
   <hr>
 
-  <!-- Post List: pure text, no cards -->
   <section class="post-list">
-    ${recent.map((post) => renderEntry(post)).join('\n')}
+    ${recent.map((post) => renderEntry(post, bp)).join('\n')}
   </section>
 
   ${
@@ -30,18 +29,18 @@ export function renderHome({ posts, site }) {
       ? `
   <hr>
   <div class="view-all">
-    <a href="/archive/">All Posts →</a>
+    <a href="${bp}/archive/">All Posts →</a>
   </div>`
       : ''
   }
 </main>`;
 }
 
-function renderEntry(post) {
+function renderEntry(post, bp) {
   return `
   <article class="post-entry" data-prefetch>
     <h3 class="post-entry-title">
-      <a href="/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
+      <a href="${bp}/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
     </h3>
     <div class="post-entry-meta">
       Published: ${formatDate(post.date, 'short')}${post.readingTime ? ` • ${post.readingTime} min read` : ''}

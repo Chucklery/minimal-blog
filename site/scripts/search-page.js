@@ -1,14 +1,17 @@
-// search-page.js — 客户端搜索（加载构建期索引，内存过滤）
+// search-page.js — 客户端搜索
 
 (async function () {
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results');
   if (!input || !results) return;
 
-  // 加载索引
+  // 自动检测 basePath（从当前页面路径推断）
+  const pagePath = location.pathname;
+  const basePath = pagePath.replace(/\/search\/.*$/, '');
+
   let posts = [];
   try {
-    const res = await fetch('/assets/search-index.json');
+    const res = await fetch(`${basePath}/assets/search-index.json`);
     if (!res.ok) throw new Error('Index not found');
     posts = await res.json();
   } catch {
@@ -24,7 +27,7 @@
     return `
     <article class="search-result">
       <h3 class="search-result-title">
-        <a href="/posts/${escape(post.slug)}.html">${escape(post.title)}</a>
+        <a href="${basePath}/posts/${escape(post.slug)}.html">${escape(post.title)}</a>
       </h3>
       <div class="search-result-meta">${escape(post.date)}${post.tags.length ? ' · ' + post.tags.map(escape).join(', ') : ''}</div>
       <p class="search-result-desc">${escape(post.description)}</p>

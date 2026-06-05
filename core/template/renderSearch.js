@@ -2,6 +2,7 @@
 // 搜索页模板
 
 export function renderSearch({ site }) {
+  const bp = site.basePath || '';
   return `
 <main class="search-page">
   <section class="search-hero">
@@ -23,5 +24,5 @@ export function renderSearch({ site }) {
   </section>
 </main>
 
-<script src="/assets/search-page.js" type="module"></script>`;
+<script src="${bp}/assets/search-page.js" type="module"></script>`;
 }

@@ -45,6 +45,7 @@ export function renderLayout({
     publishedDate,
   });
 
+  const bp = site.basePath || '';
   const currentYear = new Date().getFullYear();
 
   return `<!DOCTYPE html>
@@ -52,18 +53,16 @@ export function renderLayout({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  ${site.basePath ? `<base href="${escapeAttr(site.basePath)}/">` : ''}
 ${meta}
-  <link rel="stylesheet" href="/assets/reset.css">
-  <link rel="stylesheet" href="/assets/tokens.css">
-  <link rel="stylesheet" href="/assets/base.css">
-  <link rel="stylesheet" href="/assets/layout.css">
-  <link rel="stylesheet" href="/assets/prose.css">
-  <link rel="stylesheet" href="/assets/components.css">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="alternate" type="application/rss+xml" title="${escapeAttr(site.title)} RSS" href="/rss.xml">
+  <link rel="stylesheet" href="${bp}/assets/reset.css">
+  <link rel="stylesheet" href="${bp}/assets/tokens.css">
+  <link rel="stylesheet" href="${bp}/assets/base.css">
+  <link rel="stylesheet" href="${bp}/assets/layout.css">
+  <link rel="stylesheet" href="${bp}/assets/prose.css">
+  <link rel="stylesheet" href="${bp}/assets/components.css">
+  <link rel="icon" href="${bp}/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="${escapeAttr(site.title)} RSS" href="${bp}/rss.xml">
   <script>
-    // 阻止暗色模式闪烁 — 必须在 <head> 中同步执行
     (function() {
       var theme = localStorage.getItem('theme');
       if (!theme) theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -77,12 +76,12 @@ ${meta}
   ${hideHeader ? '' : `
   <header class="site-header">
     <div class="header-inner">
-      <a href="/" class="site-name">${escapeHtml(site.title)}</a>
+      <a href="${bp}/" class="site-name">${escapeHtml(site.title)}</a>
       <nav class="site-nav">
-        <a href="/">Posts</a>
-        <a href="/archive/">Archive</a>
-        <a href="/search/">Search</a>
-        <a href="/about/">About</a>
+        <a href="${bp}/">Posts</a>
+        <a href="${bp}/archive/">Archive</a>
+        <a href="${bp}/search/">Search</a>
+        <a href="${bp}/about/">About</a>
         <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
           <span class="theme-icon-light">☽</span>
           <span class="theme-icon-dark">☀</span>
@@ -96,17 +95,17 @@ ${meta}
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-links">
-        <a href="/rss.xml">RSS Feed</a>
+        <a href="${bp}/rss.xml">RSS Feed</a>
         <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
         ${site.author?.url ? `<a href="${escapeAttr(site.author.url)}">About</a>` : ''}
       </div>
       <div class="footer-meta">
-        © ${currentYear} ${escapeHtml(site.author?.name || site.title)} · <a href="/sitemap.xml">Sitemap</a>
+        © ${currentYear} ${escapeHtml(site.author?.name || site.title)} · <a href="${bp}/sitemap.xml">Sitemap</a>
       </div>
     </div>
   </footer>
 
-  <script src="/assets/main.js" type="module" defer></script>
+  <script src="${bp}/assets/main.js" type="module" defer></script>
 </body>
 </html>`;
 }
