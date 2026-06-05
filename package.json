@@ -1,0 +1,28 @@
+{
+  "name": "minimal-blog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/dev.js",
+    "preview": "serve dist -l 8088",
+    "deploy:local": "powershell -ExecutionPolicy Bypass -File scripts/deploy-local.ps1",
+    "test:e2e": "playwright test",
+    "check": "node scripts/check-dist.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "chokidar": "^4.0.1",
+    "esbuild": "^0.24.0",
+    "fast-glob": "^3.3.2",
+    "gray-matter": "^4.0.3",
+    "html-minifier-terser": "^7.2.0",
+    "lightningcss": "^1.28.2",
+    "markdown-it": "^14.1.0",
+    "playwright": "^1.48.0",
+    "serve": "^14.2.0",
+    "sharp": "^0.33.5",
+    "shiki": "^1.22.2"
+  }
+}

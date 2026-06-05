@@ -1,0 +1,117 @@
+// core/template/renderLayout.js
+// 统一页面骨架 — 所有页面共享的外壳
+
+import { formatDate } from '../utils/dates.js';
+import { escapeAttr } from '../utils/escapeHtml.js';
+import { renderMeta } from './renderMeta.js';
+
+/**
+ * 生成完整的 HTML 页面
+ * @param {Object} opts
+ * @param {Object} opts.site   - site.config
+ * @param {string} opts.page   - 'home' | 'post' | 'archive' | 'about'
+ * @param {string} opts.title
+ * @param {string} opts.description
+ * @param {string} opts.bodyContent  - 渲染好的 <main> 内容
+ * @param {string} [opts.canonicalUrl]
+ * @param {string} [opts.ogImage]
+ * @param {string} [opts.publishedDate]
+ * @param {boolean} [opts.showProgress] - 是否显示阅读进度条
+ * @param {string} [opts.tocHtml] - 文章页 TOC
+ * @returns {string}
+ */
+export function renderLayout({
+  site,
+  page,
+  title,
+  description,
+  bodyContent,
+  canonicalUrl,
+  ogImage,
+  publishedDate,
+  showProgress = false,
+  hideHeader = false,
+  tocHtml = '',
+}) {
+  const fullTitle = page === 'home' ? site.title : `${title} — ${site.title}`;
+  const ogType = page === 'post' ? 'article' : 'website';
+
+  const meta = renderMeta({
+    title: fullTitle,
+    description,
+    canonicalUrl,
+    ogImage,
+    ogType,
+    publishedDate,
+  });
+
+  const currentYear = new Date().getFullYear();
+
+  return `<!DOCTYPE html>
+<html lang="${site.language || 'zh-CN'}" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+${meta}
+  <link rel="stylesheet" href="/assets/reset.css">
+  <link rel="stylesheet" href="/assets/tokens.css">
+  <link rel="stylesheet" href="/assets/base.css">
+  <link rel="stylesheet" href="/assets/layout.css">
+  <link rel="stylesheet" href="/assets/prose.css">
+  <link rel="stylesheet" href="/assets/components.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/rss+xml" title="${escapeAttr(site.title)} RSS" href="/rss.xml">
+  <script>
+    // 阻止暗色模式闪烁 — 必须在 <head> 中同步执行
+    (function() {
+      var theme = localStorage.getItem('theme');
+      if (!theme) theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body class="page-${page}">
+  ${showProgress ? '<div class="progress" data-progress></div>' : ''}
+
+  ${hideHeader ? '' : `
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="site-name">${escapeHtml(site.title)}</a>
+      <nav class="site-nav">
+        <a href="/">Posts</a>
+        <a href="/archive/">Archive</a>
+        <a href="/search/">Search</a>
+        <a href="/about/">About</a>
+        <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+          <span class="theme-icon-light">☽</span>
+          <span class="theme-icon-dark">☀</span>
+        </button>
+      </nav>
+    </div>
+  </header>`}
+
+  ${bodyContent}
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/rss.xml">RSS Feed</a>
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+        ${site.author?.url ? `<a href="${escapeAttr(site.author.url)}">About</a>` : ''}
+      </div>
+      <div class="footer-meta">
+        © ${currentYear} ${escapeHtml(site.author?.name || site.title)} · <a href="/sitemap.xml">Sitemap</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/main.js" type="module" defer></script>
+</body>
+</html>`;
+}
+
+// 局部转义（模板内使用）
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
