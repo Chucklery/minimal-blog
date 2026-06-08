@@ -3,7 +3,7 @@ title: "极简高性能博客软件总体 Phase 计划"
 slug: "platform-sutra-interpretation"
 date: "2026-06-01"
 description: "极简高性能博客软件总体 Phase 计划"
-tags: [zen, buddhism, philosophy, classics, chan]
+tags: [plans, Phase]
 draft: false
 featured: true
 ---

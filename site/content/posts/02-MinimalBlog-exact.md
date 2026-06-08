@@ -3,7 +3,7 @@ title: "极简高性能博客软件详细落地方案"
 slug: "02-MinimalBlog-exact"
 date: "2026-06-01"
 description: "产品设计到原型、技术选型、开发、Nginx for Windows 本机部署"
-tags: [zen, buddhism, philosophy, classics, chan]
+tags: [detail-plan, minimal]
 draft: false
 featured: true
 ---
