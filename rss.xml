@@ -5,9 +5,16 @@
     <link>http://localhost:8088</link>
     <description>Writing about code, design, and the spaces between.</description>
     <language>zh-CN</language>
-    <lastBuildDate>Mon, 08 Jun 2026 09:58:54 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 08 Jun 2026 10:54:34 GMT</lastBuildDate>
     <atom:link href="http://localhost:8088/rss.xml" rel="self" type="application/rss+xml"/>
     
+    <item>
+      <title><![CDATA[王德峰《六祖坛经》讲读全记录]]></title>
+      <link>http://localhost:8088/posts/altar-sutra-wdf.html</link>
+      <guid isPermaLink="true">http://localhost:8088/posts/altar-sutra-wdf.html</guid>
+      <description><![CDATA[复旦大学王德峰教授《坛经》十品完整讲读笔录——从行由品到付嘱品，逐品讲解惠能禅宗思想，涵盖般若、决疑、定慧、坐禅、忏悔、机缘、顿渐、宣诏、付嘱全十品。]]></description>
+      <pubDate>Sat, 06 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title><![CDATA[极简高性能博客软件总体 Phase 计划]]></title>
       <link>http://localhost:8088/posts/platform-sutra-interpretation.html</link>
