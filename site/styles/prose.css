@@ -5,8 +5,8 @@
   /* ── 正文：多端自适应字号 + 紧凑排版 ── */
   .prose {
     font-family: var(--font-serif);
-    font-size: clamp(16px, 1.6vw, 19px);
-    line-height: 1.72;
+    font-size: clamp(15px, 1.2vw + 9px, 18px);
+    line-height: 1.65;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }

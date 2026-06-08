@@ -17,11 +17,13 @@ import { renderPost } from '../core/template/renderPost.js';
 import { renderArchive } from '../core/template/renderArchive.js';
 import { renderAbout } from '../core/template/renderAbout.js';
 import { renderSearch } from '../core/template/renderSearch.js';
+import { renderTagPage } from '../core/template/renderTagPage.js';
 import { cleanDist } from '../core/output/cleanDist.js';
 import { writePage } from '../core/output/writePage.js';
 import { writeRss } from '../core/output/writeRss.js';
 import { writeSitemap } from '../core/output/writeSitemap.js';
 import { writeSearchIndex } from '../core/output/writeSearchIndex.js';
+import { writeTagPages } from '../core/output/writeTagPages.js';
 import { buildCss } from '../core/assets/buildCss.js';
 import { buildJs } from '../core/assets/buildJs.js';
 import { buildImages } from '../core/assets/buildImages.js';
@@ -215,7 +217,10 @@ async function build() {
   // 14. Sitemap
   await writeSitemap({ posts, site });
 
-  // 15. 搜索索引
+  // 15. Tag 页面
+  await writeTagPages({ posts, site, renderTagPage, renderLayout, minify });
+
+  // 16. 搜索索引
   if (site.build?.generateSearch) {
     await writeSearchIndex({ posts, site });
   }

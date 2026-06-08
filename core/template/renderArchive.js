@@ -15,6 +15,7 @@ export function renderArchive({ posts, site }) {
   const bp = site.basePath || '';
   const grouped = groupByYear(posts);
   const years = Array.from(grouped.keys()).sort((a, b) => b - a);
+  const tagCloud = buildTagCloud(posts, bp);
 
   return `
 <main class="archive">
@@ -22,6 +23,8 @@ export function renderArchive({ posts, site }) {
     <h1>Archive</h1>
     <p>${posts.length} posts</p>
   </header>
+
+  ${tagCloud ? `<nav class="tag-cloud">${tagCloud}</nav>` : ''}
 
   <div class="archive-list">
     ${years
@@ -46,6 +49,29 @@ export function renderArchive({ posts, site }) {
       .join('\n')}
   </div>
 </main>`;
+}
+
+function buildTagCloud(posts, bp) {
+  const map = new Map();
+  for (const post of posts) {
+    if (!post.tags || post.tags.length === 0) continue;
+    for (const tag of post.tags) {
+      const key = tag.toLowerCase();
+      if (!map.has(key)) map.set(key, { label: tag, count: 0 });
+      map.get(key).count++;
+    }
+  }
+  if (map.size === 0) return '';
+
+  const entries = [...map.entries()].sort((a, b) => b[1].count - a[1].count);
+  return entries
+    .map(([key, { label, count }]) => {
+      let cls = 'tag-cloud-sm';
+      if (count >= 5) cls = 'tag-cloud-lg';
+      else if (count >= 2) cls = 'tag-cloud-md';
+      return `<a href="${bp}/tags/${key}/" class="tag-cloud-link ${cls}">#${escapeHtml(label)}</a>`;
+    })
+    .join(' ');
 }
 
 function escapeHtml(str) {

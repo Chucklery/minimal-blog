@@ -41,10 +41,10 @@
     margin: 0;
   }
 
-  /* ── 文章页：深色封面区 ── */
+  /* ── 文章页：封面区（跟随主题） ── */
   .post-cover {
-    background: #0a0a0f;
     padding: 0 var(--page-gutter);
+    border-bottom: 1px solid var(--line);
   }
 
   .post-cover-inner {
@@ -70,14 +70,14 @@
     align-items: center;
     gap: 4px;
     font-size: 0.9em;
-    color: #a5a1aa;
+    color: var(--muted);
     border-bottom: none;
     margin-bottom: var(--space-8);
     transition: color var(--duration-fast) var(--ease-out);
   }
 
   .post-back-cover:hover {
-    color: #f4f2ec;
+    color: var(--text);
   }
 
   .post-cover-title {
@@ -85,13 +85,13 @@
     font-weight: 700;
     letter-spacing: -0.04em;
     line-height: 1.15;
-    color: #f4f2ec;
+    color: var(--text);
     margin-bottom: var(--space-6);
   }
 
   .post-cover-meta {
     font-size: 0.9em;
-    color: #a5a1aa;
+    color: var(--muted);
     display: flex;
     flex-wrap: wrap;
     gap: 0.3em;
@@ -107,7 +107,7 @@
     flex-wrap: wrap;
     gap: var(--space-4);
     font-size: 0.88em;
-    color: #a5a1aa;
+    color: var(--muted);
   }
 
   .post-tag {
@@ -347,6 +347,104 @@
       gap: var(--space-2);
       text-align: center;
     }
+
+    /* 手机端 header：防止导航溢出，确保主题按钮可见 */
+    .header-inner {
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      padding-top: var(--space-3);
+      padding-bottom: var(--space-3);
+    }
+
+    .site-nav {
+      gap: var(--space-3);
+      font-size: 0.92em;
+    }
+  }
+
+  /* ── Tag 云 ── */
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-8);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tag-cloud-link {
+    border-bottom: none;
+    color: var(--muted);
+    transition: color var(--duration-fast) var(--ease-out);
+    white-space: nowrap;
+  }
+
+  .tag-cloud-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-style: wavy;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.25em;
+  }
+
+  .tag-cloud-lg { font-size: 1.1em; font-weight: 600; }
+  .tag-cloud-md { font-size: 0.95em; }
+  .tag-cloud-sm { font-size: 0.82em; }
+
+  /* ── Tag 页面 ── */
+  .tag-page {
+    max-width: var(--measure);
+    margin: var(--space-16) auto;
+    padding: 0 var(--page-gutter);
+  }
+
+  .tag-header {
+    margin-bottom: var(--space-12);
+  }
+
+  .tag-back {
+    display: inline-block;
+    font-size: 0.9em;
+    color: var(--muted);
+    border-bottom: none;
+    margin-bottom: var(--space-6);
+  }
+
+  .tag-back:hover {
+    color: var(--text);
+  }
+
+  .tag-header h1 {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  .tag-count {
+    color: var(--muted);
+    font-size: 0.92em;
+    margin-top: var(--space-2);
+  }
+
+  .tag-post-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .tag-post-list li {
+    display: flex;
+    gap: var(--space-6);
+    padding: var(--space-2) 0;
+    font-size: 0.95em;
+  }
+
+  .tag-post-list time {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    white-space: nowrap;
+    min-width: 85px;
   }
 
   /* ── 搜索页 ── */
