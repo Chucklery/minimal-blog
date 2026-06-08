@@ -14,7 +14,7 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
   return `
 <div class="post-cover">
   <div class="post-cover-inner">
-    <a href="${bp}/" class="post-back-cover"><img src="${bp}/left-arrow.svg" alt="←" class="arrow-icon" width="16" height="16"> Back</a>
+    <a href="${bp}/" class="post-back-cover"><img src="${bp}/left-arrow.svg" alt="←" class="arrow-icon" width="16" height="16"></a>
     <h1 class="post-cover-title">${escapeHtml(post.title)}</h1>
     <div class="post-cover-meta">
       <span>Published</span>
