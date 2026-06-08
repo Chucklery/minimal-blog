@@ -14,7 +14,7 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
   return `
 <div class="post-cover">
   <div class="post-cover-inner">
-    <a href="${bp}/" class="post-back-cover"><svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16"><path d="M10 2 L5 7 l0.7 0.7 3.8-3.8 0 10.1 h1 V3.9 l3.8 3.8 L13 7 Z" fill="currentColor"/></svg></a>
+    <a href="${bp}/" class="post-back-cover"><svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16"><path d="M8 2 L3 7 l0.7 0.7 L7 4.4 V13 h1 V4.4 l3.3 3.3 L12 7 Z" fill="currentColor"/></svg></a>
     <h1 class="post-cover-title">${escapeHtml(post.title)}</h1>
     <div class="post-cover-meta">
       <span>Published</span>
@@ -34,7 +34,7 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
     <footer class="post-footer">
       <nav class="post-nav">
         ${prevPost
-          ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev"><svg class="arrow-icon" width="14" height="14" viewBox="0 0 16 16"><path d="M10 2 L5 7 l0.7 0.7 3.8-3.8 0 10.1 h1 V3.9 l3.8 3.8 L13 7 Z" fill="currentColor"/></svg> ${escapeHtml(prevPost.title)}</a>`
+          ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev"><svg class="arrow-icon" width="14" height="14" viewBox="0 0 16 16"><path d="M8 2 L3 7 l0.7 0.7 L7 4.4 V13 h1 V4.4 l3.3 3.3 L12 7 Z" fill="currentColor"/></svg> ${escapeHtml(prevPost.title)}</a>`
           : '<span></span>'}
         ${nextPost
           ? `<a href="${bp}/posts/${escapeAttr(nextPost.slug)}.html" class="post-nav-next">${escapeHtml(nextPost.title)} →</a>`
