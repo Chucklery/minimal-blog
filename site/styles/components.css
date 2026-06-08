@@ -53,8 +53,22 @@
     padding: var(--space-16) 0 var(--space-12);
   }
 
+  /* ── 箭头图标 ── */
+  .arrow-icon {
+    display: inline;
+    vertical-align: middle;
+    opacity: 0.7;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+
+  a:hover .arrow-icon {
+    opacity: 1;
+  }
+
   .post-back-cover {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.9em;
     color: #a5a1aa;
     border-bottom: none;

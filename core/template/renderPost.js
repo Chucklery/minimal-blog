@@ -14,7 +14,7 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
   return `
 <div class="post-cover">
   <div class="post-cover-inner">
-    <a href="${bp}/" class="post-back-cover">← Back</a>
+    <a href="${bp}/" class="post-back-cover"><img src="${bp}/left-arrow.svg" alt="←" class="arrow-icon" width="16" height="16"> Back</a>
     <h1 class="post-cover-title">${escapeHtml(post.title)}</h1>
     <div class="post-cover-meta">
       <span>Published</span>
@@ -34,7 +34,7 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
     <footer class="post-footer">
       <nav class="post-nav">
         ${prevPost
-          ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev">← ${escapeHtml(prevPost.title)}</a>`
+          ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev"><img src="${bp}/left-arrow.svg" alt="←" class="arrow-icon" width="14" height="14"> ${escapeHtml(prevPost.title)}</a>`
           : '<span></span>'}
         ${nextPost
           ? `<a href="${bp}/posts/${escapeAttr(nextPost.slug)}.html" class="post-nav-next">${escapeHtml(nextPost.title)} →</a>`
