@@ -36,10 +36,10 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
     <footer class="post-footer">
       <nav class="post-nav">
         ${prevPost
-          ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev">${escapeHtml(prevPost.title)} ←</a>`
+          ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev"> ← ${escapeHtml(prevPost.title)}</a>`
           : '<span></span>'}
         ${nextPost
-          ? `<a href="${bp}/posts/${escapeAttr(nextPost.slug)}.html" class="post-nav-next">${escapeHtml(nextPost.title)} →</a>`
+          ? `<a href="${bp}/posts/${escapeAttr(nextPost.slug)}.html" class="post-nav-next"> → ${escapeHtml(nextPost.title)}</a>`
           : '<span></span>'}
       </nav>
     </footer>
