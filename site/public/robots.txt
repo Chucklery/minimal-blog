@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: http://localhost:8088/sitemap.xml
+Sitemap: https://chucklery.github.io/minimal-blog/sitemap.xml
