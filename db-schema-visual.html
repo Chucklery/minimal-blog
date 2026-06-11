@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>minimal-blog 数据库结构图</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --line: #1e293b;
+      --users: #22d3ee;
+      --posts: #34d399;
+      --media: #fbbf24;
+      --views: #a78bfa;
+      --search: #fb923c;
+      --ai: #fb7185;
+      --fts: #c084fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "JetBrains Mono", "Consolas", monospace;
+      background: var(--bg);
+      color: var(--text);
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .sub { color: var(--muted); margin-bottom: 22px; }
+    .legend {
+      display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .legend span {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(15,23,42,.9); border: 1px solid var(--line);
+      border-radius: 999px; padding: 6px 10px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(300px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: rgba(15,23,42,.92);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li {
+      padding: 7px 0;
+      border-bottom: 1px dashed rgba(148,163,184,.18);
+      font-size: 13px;
+    }
+    li:last-child { border-bottom: 0; }
+    .pk { color: #fde68a; }
+    .fk { color: #fda4af; }
+    .diagram {
+      margin-top: 24px;
+      background: rgba(15,23,42,.92);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      overflow: auto;
+    }
+    svg { width: 100%; height: auto; min-width: 1400px; }
+    .node-title { font-size: 18px; font-weight: 700; }
+    .node-sub { font-size: 11px; fill: #94a3b8; }
+    .field { font-size: 12px; }
+    .footer { margin-top: 18px; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>minimal-blog 数据库结构图</h1>
+    <div class="sub">来源：backend/src/db/database.js 中的建表语句。普通表 6 张 + FTS5 虚表 1 张。</div>
+
+    <div class="legend">
+      <span><i class="dot" style="background:var(--users)"></i> users</span>
+      <span><i class="dot" style="background:var(--posts)"></i> posts</span>
+      <span><i class="dot" style="background:var(--media)"></i> media</span>
+      <span><i class="dot" style="background:var(--views)"></i> views</span>
+      <span><i class="dot" style="background:var(--search)"></i> search_index</span>
+      <span><i class="dot" style="background:var(--ai)"></i> ai_documents</span>
+      <span><i class="dot" style="background:var(--fts)"></i> search_fts (virtual)</span>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2><i class="dot" style="background:var(--users)"></i> users</h2>
+        <div class="meta">管理员用户表</div>
+        <ul>
+          <li><span class="pk">PK</span> id INTEGER AUTOINCREMENT</li>
+          <li>username TEXT UNIQUE NOT NULL</li>
+          <li>password_hash TEXT NOT NULL</li>
+          <li>created_at DATETIME DEFAULT CURRENT_TIMESTAMP</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2><i class="dot" style="background:var(--posts)"></i> posts</h2>
+        <div class="meta">文章主表</div>
+        <ul>
+          <li><span class="pk">PK</span> id INTEGER AUTOINCREMENT</li>
+          <li>title TEXT NOT NULL</li>
+          <li>slug TEXT UNIQUE NOT NULL</li>
+          <li>content_md TEXT DEFAULT ''</li>
+          <li>content_html TEXT DEFAULT ''</li>
+          <li>excerpt TEXT DEFAULT ''</li>
+          <li>status TEXT DEFAULT 'draft'</li>
+          <li>created_at DATETIME DEFAULT CURRENT_TIMESTAMP</li>
+          <li>updated_at DATETIME DEFAULT CURRENT_TIMESTAMP</li>
+          <li>published_at DATETIME</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2><i class="dot" style="background:var(--media)"></i> media</h2>
+        <div class="meta">上传媒体资源表</div>
+        <ul>
+          <li><span class="pk">PK</span> id INTEGER AUTOINCREMENT</li>
+          <li>filename TEXT NOT NULL</li>
+          <li>filepath TEXT NOT NULL</li>
+          <li>mime_type TEXT DEFAULT ''</li>
+          <li>size INTEGER DEFAULT 0</li>
+          <li>width INTEGER DEFAULT 0</li>
+          <li>height INTEGER DEFAULT 0</li>
+          <li>created_at DATETIME DEFAULT CURRENT_TIMESTAMP</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2><i class="dot" style="background:var(--views)"></i> views</h2>
+        <div class="meta">文章浏览计数表</div>
+        <ul>
+          <li><span class="pk">PK</span> id INTEGER AUTOINCREMENT</li>
+          <li><span class="fk">FK</span> post_id INTEGER NOT NULL → posts.id</li>
+          <li>count INTEGER DEFAULT 0</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2><i class="dot" style="background:var(--search)"></i> search_index</h2>
+        <div class="meta">普通搜索索引表</div>
+        <ul>
+          <li><span class="pk">PK</span> id INTEGER AUTOINCREMENT</li>
+          <li><span class="fk">FK</span> post_id INTEGER NOT NULL → posts.id</li>
+          <li>content TEXT NOT NULL</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2><i class="dot" style="background:var(--ai)"></i> ai_documents</h2>
+        <div class="meta">AI 文档分块 / embedding 表</div>
+        <ul>
+          <li><span class="pk">PK</span> id INTEGER AUTOINCREMENT</li>
+          <li>post_id INTEGER</li>
+          <li>chunk_text TEXT NOT NULL</li>
+          <li>embedding TEXT</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1450 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="database schema diagram">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+
+        <path d="M 610 190 C 670 190, 710 190, 760 190" stroke="#94a3b8" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+        <path d="M 1140 210 C 1180 210, 1200 210, 1240 210" stroke="#a78bfa" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+        <path d="M 1140 390 C 1180 390, 1200 390, 1240 390" stroke="#fb923c" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+        <path d="M 1140 570 C 1180 570, 1200 570, 1240 570" stroke="#fb7185" stroke-width="2.5" fill="none" marker-end="url(#arrow)" stroke-dasharray="6 6"/>
+        <path d="M 470 350 C 470 520, 470 570, 470 570 C 470 650, 650 680, 760 680" stroke="#c084fc" stroke-width="2.5" fill="none" marker-end="url(#arrow)" stroke-dasharray="6 6"/>
+
+        <g transform="translate(60,70)">
+          <rect width="380" height="170" rx="12" fill="#0f172a" stroke="var(--users)" stroke-width="2"/>
+          <text x="20" y="30" fill="var(--users)" class="node-title">users</text>
+          <text x="20" y="50" class="node-sub">管理员用户表</text>
+          <text x="20" y="82" fill="#fde68a" class="field">PK  id</text>
+          <text x="20" y="104" fill="#e2e8f0" class="field">username  UNIQUE NOT NULL</text>
+          <text x="20" y="126" fill="#e2e8f0" class="field">password_hash  NOT NULL</text>
+          <text x="20" y="148" fill="#94a3b8" class="field">created_at  DEFAULT CURRENT_TIMESTAMP</text>
+        </g>
+
+        <g transform="translate(760,70)">
+          <rect width="380" height="280" rx="12" fill="#0f172a" stroke="var(--posts)" stroke-width="2"/>
+          <text x="20" y="30" fill="var(--posts)" class="node-title">posts</text>
+          <text x="20" y="50" class="node-sub">文章主表 / 核心实体</text>
+          <text x="20" y="82" fill="#fde68a" class="field">PK  id</text>
+          <text x="20" y="104" class="field" fill="#e2e8f0">title  NOT NULL</text>
+          <text x="20" y="126" class="field" fill="#e2e8f0">slug  UNIQUE NOT NULL</text>
+          <text x="20" y="148" class="field" fill="#e2e8f0">content_md</text>
+          <text x="20" y="170" class="field" fill="#e2e8f0">content_html</text>
+          <text x="20" y="192" class="field" fill="#e2e8f0">excerpt</text>
+          <text x="20" y="214" class="field" fill="#e2e8f0">status = 'draft'</text>
+          <text x="20" y="236" class="field" fill="#94a3b8">created_at</text>
+          <text x="20" y="258" class="field" fill="#94a3b8">updated_at</text>
+        </g>
+
+        <g transform="translate(60,330)">
+          <rect width="380" height="180" rx="12" fill="#0f172a" stroke="var(--media)" stroke-width="2"/>
+          <text x="20" y="30" fill="var(--media)" class="node-title">media</text>
+          <text x="20" y="50" class="node-sub">上传资源表</text>
+          <text x="20" y="82" fill="#fde68a" class="field">PK  id</text>
+          <text x="20" y="104" class="field" fill="#e2e8f0">filename</text>
+          <text x="20" y="126" class="field" fill="#e2e8f0">filepath</text>
+          <text x="20" y="148" class="field" fill="#e2e8f0">mime_type / size</text>
+          <text x="20" y="170" class="field" fill="#e2e8f0">width / height / created_at</text>
+        </g>
+
+        <g transform="translate(1240,130)">
+          <rect width="160" height="120" rx="12" fill="#0f172a" stroke="var(--views)" stroke-width="2"/>
+          <text x="16" y="28" fill="var(--views)" class="node-title">views</text>
+          <text x="16" y="48" class="node-sub">浏览计数</text>
+          <text x="16" y="74" fill="#fde68a" class="field">PK id</text>
+          <text x="16" y="94" fill="#fda4af" class="field">FK post_id</text>
+          <text x="16" y="114" fill="#e2e8f0" class="field">count</text>
+        </g>
+
+        <g transform="translate(1240,320)">
+          <rect width="160" height="120" rx="12" fill="#0f172a" stroke="var(--search)" stroke-width="2"/>
+          <text x="16" y="28" fill="var(--search)" class="node-title">search_index</text>
+          <text x="16" y="48" class="node-sub">普通搜索</text>
+          <text x="16" y="74" fill="#fde68a" class="field">PK id</text>
+          <text x="16" y="94" fill="#fda4af" class="field">FK post_id</text>
+          <text x="16" y="114" fill="#e2e8f0" class="field">content</text>
+        </g>
+
+        <g transform="translate(1240,500)">
+          <rect width="160" height="120" rx="12" fill="#0f172a" stroke="var(--ai)" stroke-width="2"/>
+          <text x="16" y="28" fill="var(--ai)" class="node-title">ai_documents</text>
+          <text x="16" y="48" class="node-sub">AI 分块</text>
+          <text x="16" y="74" fill="#fde68a" class="field">PK id</text>
+          <text x="16" y="94" fill="#e2e8f0" class="field">post_id</text>
+          <text x="16" y="114" fill="#e2e8f0" class="field">chunk_text / embedding</text>
+        </g>
+
+        <g transform="translate(760,620)">
+          <rect width="300" height="90" rx="12" fill="#0f172a" stroke="var(--fts)" stroke-width="2" stroke-dasharray="8 6"/>
+          <text x="20" y="30" fill="var(--fts)" class="node-title">search_fts</text>
+          <text x="20" y="52" class="node-sub">FTS5 虚表（全文搜索）</text>
+          <text x="20" y="76" fill="#e2e8f0" class="field">columns: title, content</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="footer">
+      文件位置：D:\workspace\others\minimal-blog\db-schema-visual.html
+    </div>
+  </div>
+</body>
+</html>

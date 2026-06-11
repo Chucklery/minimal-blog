@@ -25,6 +25,10 @@ export function formatDate(date, style = 'full') {
         month: '2-digit',
         day: '2-digit',
       }); // 2026/06/05
+    case 'datetime':
+      return d.toLocaleDateString(LOCALE, {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+      }) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); // 2026/06/05 14:30
     case 'full':
     default:
       return d.toLocaleDateString(LOCALE, {

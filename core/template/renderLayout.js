@@ -1,7 +1,5 @@
 // core/template/renderLayout.js
 // 统一页面骨架 — 所有页面共享的外壳
-
-import { formatDate } from '../utils/dates.js';
 import { escapeAttr } from '../utils/escapeHtml.js';
 import { renderMeta } from './renderMeta.js';
 
@@ -106,6 +104,11 @@ ${meta}
   </footer>
 
   <script src="${bp}/assets/main.js" type="module" defer></script>
+  <script src="${bp}/assets/viewCounter.js" type="module"></script>
+  <script>
+    // Auto-reload: poll version.json every 30s, reload if new build detected
+    (function(){var v=0;setInterval(function(){fetch('${bp}/version.json?t='+Date.now()).then(function(r){return r.json()}).then(function(d){if(!v)v=d.ts;else if(d.ts!==v){v=d.ts;location.reload()}}).catch(function(){})},30000)})();
+  </script>
 </body>
 </html>`;
 }

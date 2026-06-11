@@ -43,7 +43,7 @@ function renderEntry(post, bp) {
       <a href="${bp}/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
     </h3>
     <div class="post-entry-meta">
-      Published: ${formatDate(post.date, 'short')}${post.readingTime ? ` • ${post.readingTime} min read` : ''}
+      Published: ${formatDate(post.date, 'datetime')}${post.readingTime ? ` • ${post.readingTime} min read` : ''}
     </div>
     <p class="post-entry-desc">${escapeHtml(post.description)}</p>
   </article>`;

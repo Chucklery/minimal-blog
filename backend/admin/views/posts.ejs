@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Posts — Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .table td, .table th { vertical-align: middle }
+    .btn-group-actions { display: flex; gap: 4px; flex-wrap: wrap }
+    .created-time { white-space: nowrap; font-size: .85rem; color: #6b7280 }
+    .toast-box { position: fixed; bottom: 24px; right: 24px; z-index: 9999 }
+    .toast-msg { background: #222; color: #fff; padding: 10px 20px; border-radius: 6px; margin-top: 8px; font-size: .9rem; animation: fadeIn .2s }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-3">
+  <a class="navbar-brand" href="/admin/dashboard">← Dashboard</a>
+  <a href="/admin/posts/new" class="btn btn-sm btn-light">+ New Post</a>
+</nav>
+<div class="container mt-4">
+  <h3>Posts</h3>
+  <table class="table mt-3">
+    <thead><tr><th>Title</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody>
+      <% posts.forEach(function(p){ %>
+      <tr id="row-<%= p.id %>">
+        <td>
+          <strong><%= p.title %></strong>
+          <% if (p.slug) { %><br><small class="text-muted font-monospace">/<%= p.slug %></small><% } %>
+        </td>
+        <td><span class="badge bg-<%= p.status === 'published' ? 'success' : p.status === 'draft' ? 'warning text-dark' : 'secondary' %>"><%= p.status %></span></td>
+        <td class="created-time"><%= formatDate(p.created_at) %></td>
+        <td>
+          <div class="btn-group-actions">
+            <a href="/admin/posts/<%= p.id %>/edit" class="btn btn-sm btn-outline-dark">Edit</a>
+            <% if (p.status !== 'published') { %>
+            <button class="btn btn-sm btn-outline-success" onclick="publishPost(<%= p.id %>, this)">Publish</button>
+            <% } %>
+            <button class="btn btn-sm btn-outline-danger" onclick="deletePost(<%= p.id %>, this)" data-phase="idle">Delete</button>
+          </div>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<div id="toasts" class="toast-box"></div>
+
+<script>
+function toast(msg, isErr) {
+  const box = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast-msg';
+  el.style.background = isErr ? '#d32f2f' : '#222';
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(function () { el.remove(); }, 3000);
+}
+
+async function publishPost(id, btn) {
+  if (!confirm('Publish this post?')) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const res = await fetch('/api/posts/' + id + '/publish', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      toast('Published!');
+      location.reload();
+    } else {
+      toast(data.message || 'Publish failed', true);
+      btn.disabled = false;
+      btn.textContent = 'Publish';
+    }
+  } catch (e) {
+    toast('Network error', true);
+    btn.disabled = false;
+    btn.textContent = 'Publish';
+  }
+}
+
+async function deletePost(id, btn) {
+  // ---- Phase 1: confirm ----
+  if (!confirm('Delete this post? This cannot be undone.')) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Phase 1: DB...';
+  btn.setAttribute('data-phase', 'db');
+
+  try {
+    // ---- Phase 1: delete from database ----
+    toast('Phase 1: deleting from database...');
+    const res = await fetch('/api/posts/' + id, { method: 'DELETE' });
+    const data = await res.json();
+
+    if (!data.success) {
+      toast('Phase 1 FAILED: ' + (data.message || 'Unknown error'), true);
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+      btn.setAttribute('data-phase', 'idle');
+      return;
+    }
+
+    toast('Phase 1 OK: database record deleted');
+
+    // ---- Phase 2: sync to frontend ----
+    btn.textContent = 'Phase 2: Sync...';
+    btn.setAttribute('data-phase', 'sync');
+
+    toast('Phase 2: syncing frontend...');
+    var row = document.getElementById('row-' + id);
+    if (row) {
+      // small delay so user sees the phase transition
+      await new Promise(function(r) { setTimeout(r, 300); });
+      row.remove();
+      toast('Phase 2 OK: frontend synced');
+    } else {
+      toast('Phase 2: row not found (already removed?)', true);
+    }
+
+  } catch (e) {
+    toast('Network error in phase ' + btn.getAttribute('data-phase'), true);
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+    btn.setAttribute('data-phase', 'idle');
+  }
+}
+</script>
+</body>
+</html>

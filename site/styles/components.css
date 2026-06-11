@@ -65,28 +65,47 @@
     opacity: 1;
   }
 
+  .post-cover-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
   .post-back-cover {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.9em;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
     color: var(--muted);
     border-bottom: none;
-    margin-bottom: var(--space-8);
-    transition: color var(--duration-fast) var(--ease-out);
+    margin-top: 0.12em;
+    transition: color var(--duration-fast) var(--ease-out),
+                transform var(--duration-fast) var(--ease-out);
+  }
+
+  .post-back-cover svg {
+    display: block;
+    width: 28px;
+    height: 28px;
   }
 
   .post-back-cover:hover {
     color: var(--text);
+    transform: translateX(-2px);
   }
 
   .post-cover-title {
+    flex: 1;
+    min-width: 0;
     font-size: clamp(1.8rem, 5vw, 2.8rem);
     font-weight: 700;
     letter-spacing: -0.04em;
     line-height: 1.15;
     color: var(--text);
-    margin-bottom: var(--space-6);
+    margin: 0;
   }
 
   .post-cover-meta {
@@ -117,7 +136,7 @@
   /* ── 文章正文区（70% 屏宽） ── */
   .post {
     display: flex;
-    max-width: 70vw;
+    max-width: 80vw;
     margin: 0 auto;
     padding: var(--space-12) var(--page-gutter) 0;
     gap: var(--space-12);
@@ -270,8 +289,8 @@
     position: fixed;
     bottom: var(--space-6);
     right: var(--space-6);
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     background: none;
     border: none;
     color: var(--muted);
@@ -286,12 +305,13 @@
     z-index: 50;
     pointer-events: none;
     padding: 0;
+    vertical-align: middle;
   }
 
   .back-to-top svg {
     display: block;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
   }
 
   .back-to-top.visible {
@@ -331,6 +351,21 @@
 
     .post {
       padding-top: var(--space-8);
+    }
+
+    .post-cover-heading {
+      gap: var(--space-3);
+    }
+
+    .post-back-cover {
+      width: 34px;
+      height: 34px;
+      margin-top: 0.08em;
+    }
+
+    .post-back-cover svg {
+      width: 24px;
+      height: 24px;
     }
 
     .post-nav {

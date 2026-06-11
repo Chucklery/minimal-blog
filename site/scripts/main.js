@@ -183,7 +183,9 @@ function initBackToTop() {
 
   const btn = document.createElement('button');
   btn.className = 'back-to-top';
-  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" height="22" width="22"><path d="M24 4 C14 4 4 14 4 24 C5 23 6 22 7 21 C13 18 19 16 24 18 C29 20 32 22 34 26 C34.3 22 33 18.5 31 15.5 C29 12 27 7 24 4 Z M7 27 C6 29 5.5 31.5 6 34 C9 34 12 34 15 33 C12 31 9.5 29 7 27 Z" fill="currentColor"/></svg>';
+  btn.innerHTML = "<svg fill=\"currentColor\" height=\"24\" width=\"24\">\n" +
+      "  <path stroke=\"currentColor\" d=\"M5 8c0.742 0 1.85 -0.733 2.78 -1.475 1.2 -0.954 2.247 -2.094 3.046 -3.401C11.425 2.144 12 0.956 12 0m0 0c0 0.956 0.575 2.145 1.174 3.124 0.8 1.307 1.847 2.447 3.045 3.401C17.15 7.267 18.26 8 19 8m-7 -8 0 24\" stroke-width=\"1\"></path>\n" +
+      "</svg>"
   btn.setAttribute('aria-label', 'Back to top');
   document.body.appendChild(btn);
 

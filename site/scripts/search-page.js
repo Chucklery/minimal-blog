@@ -1,59 +1,61 @@
-// search-page.js — 客户端搜索
+// search-page.js — 后端 API 搜索 + 客户端 JSON 兜底
 
 (async function () {
   const input = document.getElementById('search-input');
   const results = document.getElementById('search-results');
   if (!input || !results) return;
 
-  // 自动检测 basePath（从当前页面路径推断）
   const pagePath = location.pathname;
   const basePath = pagePath.replace(/\/search\/.*$/, '');
+  let posts = []; // JSON fallback
 
-  let posts = [];
+  // Try loading JSON index as fallback
   try {
-    const res = await fetch(`${basePath}/assets/search-index.json`);
-    if (!res.ok) throw new Error('Index not found');
-    posts = await res.json();
-  } catch {
-    results.innerHTML = '<p class="search-error">Search index unavailable.</p>';
-    return;
-  }
+    const r = await fetch(`${basePath}/assets/search-index.json`);
+    if (r.ok) posts = await r.json();
+  } catch {};
 
   function escape(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function render(post) {
-    return `
-    <article class="search-result">
-      <h3 class="search-result-title">
-        <a href="${basePath}/posts/${escape(post.slug)}.html">${escape(post.title)}</a>
-      </h3>
-      <div class="search-result-meta">${escape(post.date)}${post.tags.length ? ' · ' + post.tags.map(escape).join(', ') : ''}</div>
-      <p class="search-result-desc">${escape(post.description)}</p>
-    </article>`;
-  }
-
-  function search(term) {
+  async function search(term) {
     if (!term.trim()) {
       results.innerHTML = '<p class="search-empty">Type to search...</p>';
       return;
     }
 
-    const q = term.toLowerCase();
-    const matched = posts.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        (p.tags && p.tags.some((t) => t.toLowerCase().includes(q)))
-    );
+    // Try backend API first
+    try {
+      const apiRes = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
+      const apiData = await apiRes.json();
+      if (apiData.success && apiData.data.length > 0) {
+        results.innerHTML = `<p class="search-count">${apiData.data.length} result${apiData.data.length > 1 ? 's' : ''}</p>` +
+          apiData.data.map(p => `
+            <article class="search-result">
+              <h3 class="search-result-title"><a href="${basePath}/posts/${escape(p.slug)}.html">${escape(p.title)}</a></h3>
+              <p class="search-result-desc">${p.snippet || ''}</p>
+            </article>`).join('');
+        return;
+      }
+    } catch {}
 
+    // Fallback to client-side JSON
+    const q = term.toLowerCase();
+    const matched = posts.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      (p.tags && p.tags.some(t => t.toLowerCase().includes(q)))
+    );
     if (matched.length === 0) {
       results.innerHTML = `<p class="search-empty">No results for "${escape(term)}".</p>`;
       return;
     }
-
-    results.innerHTML = `<p class="search-count">${matched.length} result${matched.length > 1 ? 's' : ''}</p>${matched.map(render).join('')}`;
+    results.innerHTML = `<p class="search-count">${matched.length} result${matched.length > 1 ? 's' : ''}</p>${matched.map(r => `
+      <article class="search-result">
+        <h3 class="search-result-title"><a href="${basePath}/posts/${escape(r.slug)}.html">${escape(r.title)}</a></h3>
+        <p class="search-result-desc">${escape(r.description)}</p>
+      </article>`).join('')}`;
   }
 
   // Debounced input

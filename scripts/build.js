@@ -1,11 +1,11 @@
 // scripts/build.js
 // 构建编排 — 按顺序调用 core 各模块
 
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { minify } from 'html-minifier-terser';
 
-import { ROOT, SITE_CONFIG } from '../core/utils/paths.js';
+import { ROOT, SITE_CONFIG, DIST_DIR } from '../core/utils/paths.js';
 import { loadPosts } from '../core/content/loadPosts.js';
 import { loadPages } from '../core/content/loadPages.js';
 import { estimateReadingTime } from '../core/content/readingTime.js';
@@ -224,6 +224,9 @@ async function build() {
   if (site.build?.generateSearch) {
     await writeSearchIndex({ posts, site });
   }
+
+  // 17. 生成版本文件（前端轮询用）
+  await writeFile(join(DIST_DIR, 'version.json'), JSON.stringify({ ts: Date.now() }), 'utf-8');
 
   console.log(`\n✅ Build complete`);
   console.timeEnd('Build');

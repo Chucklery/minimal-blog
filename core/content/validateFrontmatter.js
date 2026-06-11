@@ -14,7 +14,7 @@
  * @property {string} [updated]
  */
 
-const REQUIRED_FIELDS = ['title', 'slug', 'date', 'description'];
+const REQUIRED_FIELDS = ['title', 'slug', 'date'];
 const MAX_DESCRIPTION_LENGTH = 320;
 
 /**

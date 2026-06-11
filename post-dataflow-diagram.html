@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>minimal-blog Post 数据流图</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --panel2: #111827;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --line: #1e293b;
+      --frontend: #22d3ee;
+      --backend: #34d399;
+      --db: #a78bfa;
+      --build: #fbbf24;
+      --static: #fb923c;
+      --warn: #fb7185;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      background: var(--bg);
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .wrap { max-width: 1680px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    .sub { color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+    .panel {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      overflow: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    svg { width: 100%; height: auto; min-width: 1550px; }
+    .cards {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 16px; }
+    .card ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.8; }
+    .footer { margin-top: 16px; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>minimal-blog Post 增加 / 发布 / 删除 数据流图</h1>
+    <div class="sub">
+      左边是后台管理链路，右边是公开前台静态站链路。重点不是“前端直接查数据库”，而是：后台列表页来自 SQLite，公开前台来自 Markdown + build 后的 dist HTML。
+    </div>
+
+    <div class="panel">
+      <svg viewBox="0 0 1600 1040" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="post data flow diagram">
+        <defs>
+          <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee"/>
+          </marker>
+          <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#34d399"/>
+          </marker>
+          <marker id="arrow-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#a78bfa"/>
+          </marker>
+          <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#fbbf24"/>
+          </marker>
+          <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#fb923c"/>
+          </marker>
+          <marker id="arrow-rose" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#fb7185"/>
+          </marker>
+        </defs>
+
+        <rect x="20" y="20" width="740" height="980" rx="18" fill="none" stroke="#1e293b" stroke-width="2" stroke-dasharray="8 6"/>
+        <text x="40" y="52" fill="#94a3b8" font-size="16">后台管理链路（Admin / SQLite / EJS）</text>
+
+        <rect x="800" y="20" width="780" height="980" rx="18" fill="none" stroke="#1e293b" stroke-width="2" stroke-dasharray="8 6"/>
+        <text x="820" y="52" fill="#94a3b8" font-size="16">公开前台链路（Markdown / Build / dist / 8088）</text>
+
+        <path d="M 280 170 C 350 170, 370 170, 430 170" stroke="#22d3ee" stroke-width="3" fill="none" marker-end="url(#arrow-cyan)"/>
+        <path d="M 650 170 C 710 170, 740 170, 820 170" stroke="#34d399" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
+        <path d="M 1030 170 C 1080 170, 1120 170, 1180 170" stroke="#a78bfa" stroke-width="3" fill="none" marker-end="url(#arrow-violet)"/>
+
+        <path d="M 280 500 C 360 500, 380 500, 430 500" stroke="#22d3ee" stroke-width="3" fill="none" marker-end="url(#arrow-cyan)"/>
+        <path d="M 650 500 C 720 500, 760 500, 860 500" stroke="#34d399" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
+        <path d="M 1060 500 C 1130 500, 1170 500, 1240 500" stroke="#a78bfa" stroke-width="3" fill="none" marker-end="url(#arrow-violet)"/>
+        <path d="M 1410 500 C 1460 500, 1480 500, 1540 500" stroke="#fbbf24" stroke-width="3" fill="none" marker-end="url(#arrow-amber)"/>
+
+        <path d="M 280 840 C 350 840, 380 840, 430 840" stroke="#22d3ee" stroke-width="3" fill="none" marker-end="url(#arrow-cyan)"/>
+        <path d="M 650 840 C 720 840, 760 840, 820 840" stroke="#34d399" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
+        <path d="M 1020 840 C 1080 840, 1110 840, 1180 840" stroke="#34d399" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
+        <path d="M 1410 840 C 1460 840, 1480 840, 1540 840" stroke="#fbbf24" stroke-width="3" fill="none" marker-end="url(#arrow-amber)"/>
+
+        <path d="M 550 240 C 550 300, 550 350, 550 420" stroke="#34d399" stroke-width="2.5" fill="none" marker-end="url(#arrow-green)"/>
+        <path d="M 550 570 C 550 630, 550 680, 550 760" stroke="#34d399" stroke-width="2.5" fill="none" marker-end="url(#arrow-green)"/>
+
+        <path d="M 1450 170 C 1450 250, 1450 320, 1450 430" stroke="#fb923c" stroke-width="3" fill="none" marker-end="url(#arrow-orange)"/>
+        <path d="M 1450 570 C 1450 650, 1450 720, 1450 770" stroke="#fb923c" stroke-width="3" fill="none" marker-end="url(#arrow-orange)"/>
+
+        <path d="M 550 880 C 550 930, 650 950, 860 950" stroke="#fb7185" stroke-width="2.5" stroke-dasharray="6 6" fill="none" marker-end="url(#arrow-rose)"/>
+        <text x="625" y="930" fill="#fb7185" font-size="12">后台列表删除时：前端直接 row.remove()</text>
+
+        <g transform="translate(60,100)">
+          <rect width="220" height="140" rx="12" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+          <text x="18" y="30" fill="#22d3ee" font-size="18" font-weight="700">编辑页 editor.js</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">/admin/posts/new</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• 读表单 title/slug/body</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 组装 frontmatter + markdown</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• doSave() / doPublish()</text>
+        </g>
+
+        <g transform="translate(430,100)">
+          <rect width="220" height="140" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+          <text x="18" y="30" fill="#34d399" font-size="18" font-weight="700">POST /api/posts/draft</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">backend/routes/posts.js</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• saveDraft(app.db, body)</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• create or update</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 返回 JSON success + id</text>
+        </g>
+
+        <g transform="translate(820,100)">
+          <rect width="210" height="140" rx="12" fill="#0f172a" stroke="#a78bfa" stroke-width="2"/>
+          <text x="18" y="30" fill="#a78bfa" font-size="18" font-weight="700">SQLite: posts</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">backend/data/blog.db</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• title</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• slug</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• content_md / status</text>
+        </g>
+
+        <g transform="translate(1180,100)">
+          <rect width="270" height="140" rx="12" fill="#0f172a" stroke="#fb923c" stroke-width="2"/>
+          <text x="18" y="30" fill="#fb923c" font-size="18" font-weight="700">后台列表页 /admin/posts</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">admin.js + posts.ejs</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• postService.listPosts()</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• EJS 服务端渲染 HTML</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 浏览器刷新后看到新增草稿</text>
+        </g>
+
+        <g transform="translate(60,430)">
+          <rect width="220" height="140" rx="12" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+          <text x="18" y="30" fill="#22d3ee" font-size="18" font-weight="700">点击 Publish</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">editor.js / posts.ejs</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• doSave() 先保存 draft</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 再 fetch publish API</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 成功后 location.reload()</text>
+        </g>
+
+        <g transform="translate(430,430)">
+          <rect width="220" height="140" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+          <text x="18" y="30" fill="#34d399" font-size="18" font-weight="700">POST /api/posts/:id/publish</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">routes/posts.js</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• publishPost(db, id)</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• renderMarkdown(mdBody)</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• status -> published</text>
+        </g>
+
+        <g transform="translate(860,430)">
+          <rect width="200" height="140" rx="12" fill="#0f172a" stroke="#a78bfa" stroke-width="2"/>
+          <text x="18" y="30" fill="#a78bfa" font-size="18" font-weight="700">更新 DB</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">posts 表</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• content_html</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• status=published</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• published_at</text>
+        </g>
+
+        <g transform="translate(1240,430)">
+          <rect width="170" height="140" rx="12" fill="#0f172a" stroke="#fbbf24" stroke-width="2"/>
+          <text x="18" y="30" fill="#fbbf24" font-size="18" font-weight="700">buildPublish()</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">publishService.js</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• 解析 frontmatter</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 写 markdown 源文件</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 触发 build.js</text>
+        </g>
+
+        <g transform="translate(1540,430)">
+          <rect width="0" height="0" fill="none" stroke="none"/>
+        </g>
+
+        <g transform="translate(60,770)">
+          <rect width="220" height="140" rx="12" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+          <text x="18" y="30" fill="#22d3ee" font-size="18" font-weight="700">点击 Delete</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">posts.ejs</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• fetch DELETE /api/posts/:id</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• Phase 1: DB</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• Phase 2: row.remove()</text>
+        </g>
+
+        <g transform="translate(430,770)">
+          <rect width="220" height="140" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+          <text x="18" y="30" fill="#34d399" font-size="18" font-weight="700">DELETE /api/posts/:id</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">routes/posts.js</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• postService.deletePost()</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 先查 post 再删除</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 返回 success JSON</text>
+        </g>
+
+        <g transform="translate(820,770)">
+          <rect width="200" height="140" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+          <text x="18" y="30" fill="#34d399" font-size="18" font-weight="700">删除数据库记录</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">postRepo.remove()</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• DELETE FROM posts</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 后台下次刷新不会再出现</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 当前页靠前端 DOM 删除</text>
+        </g>
+
+        <g transform="translate(1180,770)">
+          <rect width="230" height="140" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+          <text x="18" y="30" fill="#34d399" font-size="18" font-weight="700">同步删文件</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">postService.deletePost()</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• site/content/posts/&lt;slug&gt;.md</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• dist/posts/&lt;slug&gt;.html</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 然后触发 build.js</text>
+        </g>
+
+        <g transform="translate(1360,110)">
+          <rect width="170" height="110" rx="12" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+          <text x="18" y="30" fill="#94a3b8" font-size="17" font-weight="700">关键区别</text>
+          <text x="18" y="58" fill="#e5e7eb" font-size="12">后台列表页</text>
+          <text x="18" y="76" fill="#e5e7eb" font-size="12">= SQLite 直出</text>
+          <text x="18" y="98" fill="#e5e7eb" font-size="12">(EJS 服务端渲染)</text>
+        </g>
+
+        <g transform="translate(1420,430)">
+          <rect width="120" height="140" rx="12" fill="#0f172a" stroke="#fb923c" stroke-width="2"/>
+          <text x="18" y="30" fill="#fb923c" font-size="18" font-weight="700">site/content</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">posts/*.md</text>
+          <text x="18" y="76" fill="#e5e7eb" font-size="12">公开前台的</text>
+          <text x="18" y="94" fill="#e5e7eb" font-size="12">内容源</text>
+          <text x="18" y="116" fill="#e5e7eb" font-size="12">不是直接读 DB</text>
+        </g>
+
+        <g transform="translate(1360,770)">
+          <rect width="180" height="140" rx="12" fill="#0f172a" stroke="#fbbf24" stroke-width="2"/>
+          <text x="18" y="30" fill="#fbbf24" font-size="18" font-weight="700">build.js</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">静态构建入口</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• 读 markdown</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 渲染模板</text>
+          <text x="18" y="112" fill="#e5e7eb" font-size="12">• 输出 dist/*.html</text>
+        </g>
+
+        <g transform="translate(1330,600)">
+          <rect width="210" height="120" rx="12" fill="#0f172a" stroke="#fb923c" stroke-width="2"/>
+          <text x="18" y="30" fill="#fb923c" font-size="18" font-weight="700">公开前台 :8088</text>
+          <text x="18" y="52" fill="#94a3b8" font-size="11">serve dist -l 8088</text>
+          <text x="18" y="72" fill="#e5e7eb" font-size="12">• 读 dist/index.html</text>
+          <text x="18" y="92" fill="#e5e7eb" font-size="12">• 读 dist/posts/*.html</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>新增 / Save Draft</h3>
+        <ul>
+          <li>editor.js 读取表单并组装 content_md</li>
+          <li>POST /api/posts/draft 写入 SQLite posts</li>
+          <li>返回 /admin/posts 后，EJS 重新查库渲染列表</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Publish</h3>
+        <ul>
+          <li>先保存 draft，再调用 publish API</li>
+          <li>DB 更新 status/content_html/published_at</li>
+          <li>写 site/content/posts/*.md，再 build 生成 dist/posts/*.html</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Delete</h3>
+        <ul>
+          <li>先删 SQLite 记录</li>
+          <li>再删 markdown 源文件和 dist HTML</li>
+          <li>后台当前页用 row.remove() 立即同步视觉结果</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      文件路径：D:\workspace\others\minimal-blog\post-dataflow-diagram.html
+    </div>
+  </div>
+</body>
+</html>
