@@ -5,3 +5,6 @@ dist/
 lighthouse.html
 test-results/
 .idea/
+db-schema-visual.html
+post-dataflow-diagram.html
+post-dataflow-diagram-simple.html
