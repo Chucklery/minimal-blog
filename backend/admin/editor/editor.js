@@ -172,7 +172,7 @@
     height: 560,
     mode: 'ir',
     cache: { enable: false },
-    placeholder: '开始写 Markdown 正文。frontmatter 会由上面的表单自动生成。',
+    placeholder: 'Start writing!',
     preview: {
       markdown: {
         toc: true,
@@ -182,10 +182,12 @@
       },
     },
     toolbar: [
-      'emoji', 'headings', 'bold', 'italic', 'strike', '|',
-      'line', 'quote', 'list', 'ordered-list', 'check', '|',
-      'code', 'inline-code', 'table', 'link', 'upload', '|',
-      'undo', 'redo', '|', 'outline', 'preview', 'fullscreen', 'edit-mode'
+      "outline", "headings", "bold", "italic", "strike", "link", "|",
+      "list", "ordered-list", "table", "check", "outdent", "indent", "|",
+      "quote", "line", "code", "inline-code", "insert-before", "insert-after", "|",
+      "upload", "record", "|",
+      "undo", "redo", "|",
+      "fullscreen", "edit-mode", "preview"
     ],
     upload: {
       accept: 'image/*',
