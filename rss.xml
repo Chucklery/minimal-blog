@@ -5,9 +5,16 @@
     <link>http://localhost:8088</link>
     <description>Writing about code, design, and the spaces between.</description>
     <language>zh-CN</language>
-    <lastBuildDate>Thu, 11 Jun 2026 06:20:30 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 11 Jun 2026 06:25:09 GMT</lastBuildDate>
     <atom:link href="http://localhost:8088/rss.xml" rel="self" type="application/rss+xml"/>
     
+    <item>
+      <title><![CDATA[18-35 岁人群产品机会分析]]></title>
+      <link>http://localhost:8088/posts/product-opportunity-analysis.html</link>
+      <guid isPermaLink="true">http://localhost:8088/posts/product-opportunity-analysis.html</guid>
+      <description><![CDATA[七宗罪不是玄学，而是人类高频欲望入口。产品机会不来自“欲望本身”，而来自把欲望转化为可持续、可付费、合规、可交付的服务。]]></description>
+      <pubDate>Thu, 11 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title><![CDATA[王德峰《六祖坛经》讲读全记录]]></title>
       <link>http://localhost:8088/posts/altar-sutra-wdf.html</link>

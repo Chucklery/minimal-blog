@@ -19,6 +19,12 @@
     
   </url>
   <url>
+    <loc>http://localhost:8088/posts/product-opportunity-analysis.html</loc>
+    <priority>0.8</priority>
+    <lastmod>2026-06-11</lastmod>
+    
+  </url>
+  <url>
     <loc>http://localhost:8088/posts/altar-sutra-wdf.html</loc>
     <priority>0.8</priority>
     <lastmod>2026-06-06</lastmod>
