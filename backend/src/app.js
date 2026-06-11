@@ -44,7 +44,7 @@ app.get('/health', async () => ({ status: 'ok' }));
 
 try {
   await app.listen({ port: 8055, host: '0.0.0.0' });
-  console.log('Backend: http://localhost:8055');
+  console.log('Backend: http://localhost:8055/admin/login');
 } catch (err) {
   console.error('Start failed:', err.message);
   process.exit(1);
