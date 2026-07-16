@@ -81,8 +81,8 @@ pnpm deploy:local
 
 ```bash
 pnpm build
-# 复制 nginx/minimal-blog.conf → C:\tools\nginx\conf\conf.d\
-# 启动 C:\tools\nginx\nginx.exe
+# 复制 nginx/minimal-blog.conf → local\nginx\conf\conf.d\
+# 启动 local\nginx\nginx.exe
 ```
 
 ## 验收
