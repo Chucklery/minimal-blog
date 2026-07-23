@@ -5,9 +5,16 @@
     <link>http://localhost:8088</link>
     <description>Writing about code, design, and the spaces between.</description>
     <language>zh-CN</language>
-    <lastBuildDate>Thu, 23 Jul 2026 09:18:39 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 23 Jul 2026 09:21:34 GMT</lastBuildDate>
     <atom:link href="http://localhost:8088/rss.xml" rel="self" type="application/rss+xml"/>
     
+    <item>
+      <title><![CDATA[计算机网络-自顶向下方法]]></title>
+      <link>http://localhost:8088/posts/cs-network.html</link>
+      <guid isPermaLink="true">http://localhost:8088/posts/cs-network.html</guid>
+      <description><![CDATA[计算机网络课堂笔记，参考用书《计算机网络-自顶向下方法》]]></description>
+      <pubDate>Thu, 23 Jul 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title><![CDATA[18-35 岁人群产品机会分析]]></title>
       <link>http://localhost:8088/posts/product-opportunity-analysis.html</link>
