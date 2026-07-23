@@ -1,3 +1,13 @@
+---
+title: "计算机网络-自顶向下方法"
+slug: "cs-network"
+date: "2026-07-23"
+description: "计算机网络课堂笔记，参考用书《计算机网络-自顶向下方法》"
+tags: [cs, network]
+draft: false
+featured: true
+---
+
 # 《计算机网络-自顶向下方法》笔记
 
 计算机网络课堂笔记，参考用书《计算机网络-自顶向下方法》。
