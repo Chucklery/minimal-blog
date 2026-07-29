@@ -114,19 +114,26 @@
     border-bottom: none;
   }
 
-  /* ── 文章正文区（70% 屏宽） ── */
+  /* ── 文章正文区：小屏铺满，宽屏保持舒适行长并为目录留位 ── */
   .post {
     display: flex;
-    max-width: 70vw;
+    width: 100%;
+    max-width: calc(
+      var(--post-measure) + 200px + var(--space-12) +
+      var(--post-gutter) + var(--post-gutter)
+    );
     margin: 0 auto;
-    padding: var(--space-12) var(--page-gutter) 0;
+    padding: var(--space-12) var(--post-gutter) 0;
     gap: var(--space-12);
     position: relative;
   }
 
   .post-article {
     flex: 1;
+    width: 100%;
+    max-width: var(--post-measure);
     min-width: 0;
+    margin-inline: auto;
   }
 
   /* Post footer: prev/next nav */
@@ -176,7 +183,7 @@
     flex-shrink: 0;
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 1200px) {
     .post-toc {
       display: block;
     }

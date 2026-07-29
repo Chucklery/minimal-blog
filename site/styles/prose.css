@@ -6,7 +6,7 @@
   .prose {
     font-family: var(--font-serif);
     font-size: clamp(15px, 1.2vw + 9px, 18px);
-    line-height: 1.65;
+    line-height: 1.6;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
