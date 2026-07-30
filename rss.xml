@@ -2,51 +2,51 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Chuckle&#39;s Blog</title>
-    <link>http://localhost:8088</link>
+    <link>https://chucklery.github.io/minimal-blog/</link>
     <description>Writing about code, design, and the spaces between.</description>
     <language>zh-CN</language>
-    <lastBuildDate>Wed, 29 Jul 2026 11:05:27 GMT</lastBuildDate>
-    <atom:link href="http://localhost:8088/rss.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>Thu, 30 Jul 2026 02:46:50 GMT</lastBuildDate>
+    <atom:link href="https://chucklery.github.io/minimal-blog/rss.xml" rel="self" type="application/rss+xml"/>
     
     <item>
       <title><![CDATA[计算机网络-自顶向下方法]]></title>
-      <link>http://localhost:8088/posts/cs-network.html</link>
-      <guid isPermaLink="true">http://localhost:8088/posts/cs-network.html</guid>
+      <link>https://chucklery.github.io/minimal-blog/posts/cs-network.html</link>
+      <guid isPermaLink="true">https://chucklery.github.io/minimal-blog/posts/cs-network.html</guid>
       <description><![CDATA[计算机网络课堂笔记，参考用书《计算机网络-自顶向下方法》]]></description>
       <pubDate>Thu, 23 Jul 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title><![CDATA[18-35 岁人群产品机会分析]]></title>
-      <link>http://localhost:8088/posts/product-opportunity-analysis.html</link>
-      <guid isPermaLink="true">http://localhost:8088/posts/product-opportunity-analysis.html</guid>
+      <link>https://chucklery.github.io/minimal-blog/posts/product-opportunity-analysis.html</link>
+      <guid isPermaLink="true">https://chucklery.github.io/minimal-blog/posts/product-opportunity-analysis.html</guid>
       <description><![CDATA[七宗罪不是玄学，而是人类高频欲望入口。产品机会不来自“欲望本身”，而来自把欲望转化为可持续、可付费、合规、可交付的服务。]]></description>
       <pubDate>Thu, 11 Jun 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title><![CDATA[王德峰《六祖坛经》讲读全记录]]></title>
-      <link>http://localhost:8088/posts/altar-sutra-wdf.html</link>
-      <guid isPermaLink="true">http://localhost:8088/posts/altar-sutra-wdf.html</guid>
+      <link>https://chucklery.github.io/minimal-blog/posts/altar-sutra-wdf.html</link>
+      <guid isPermaLink="true">https://chucklery.github.io/minimal-blog/posts/altar-sutra-wdf.html</guid>
       <description><![CDATA[复旦大学王德峰教授《坛经》十品完整讲读笔录——从行由品到付嘱品，逐品讲解惠能禅宗思想，涵盖般若、决疑、定慧、坐禅、忏悔、机缘、顿渐、宣诏、付嘱全十品。]]></description>
       <pubDate>Sat, 06 Jun 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title><![CDATA[极简高性能博客软件总体 Phase 计划]]></title>
-      <link>http://localhost:8088/posts/platform-sutra-interpretation.html</link>
-      <guid isPermaLink="true">http://localhost:8088/posts/platform-sutra-interpretation.html</guid>
+      <link>https://chucklery.github.io/minimal-blog/posts/platform-sutra-interpretation.html</link>
+      <guid isPermaLink="true">https://chucklery.github.io/minimal-blog/posts/platform-sutra-interpretation.html</guid>
       <description><![CDATA[极简高性能博客软件总体 Phase 计划]]></description>
       <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title><![CDATA[极简高性能博客软件详细落地方案]]></title>
-      <link>http://localhost:8088/posts/02-MinimalBlog-exact.html</link>
-      <guid isPermaLink="true">http://localhost:8088/posts/02-MinimalBlog-exact.html</guid>
+      <link>https://chucklery.github.io/minimal-blog/posts/02-MinimalBlog-exact.html</link>
+      <guid isPermaLink="true">https://chucklery.github.io/minimal-blog/posts/02-MinimalBlog-exact.html</guid>
       <description><![CDATA[产品设计到原型、技术选型、开发、Nginx for Windows 本机部署]]></description>
       <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title><![CDATA[六祖坛经解译：直指人心的智慧]]></title>
-      <link>http://localhost:8088/posts/platform-sutra-interpretation-1.html</link>
-      <guid isPermaLink="true">http://localhost:8088/posts/platform-sutra-interpretation-1.html</guid>
+      <link>https://chucklery.github.io/minimal-blog/posts/platform-sutra-interpretation-1.html</link>
+      <guid isPermaLink="true">https://chucklery.github.io/minimal-blog/posts/platform-sutra-interpretation-1.html</guid>
       <description><![CDATA[《六祖坛经》全本十品逐品解读——中国佛教唯一被称为经的本土著作，从行由品到付嘱品，从菩提偈到三科三十六对，全面解析惠能顿悟法门。]]></description>
       <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
     </item>
