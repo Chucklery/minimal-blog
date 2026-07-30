@@ -12,7 +12,7 @@ export function renderHome({ posts, site }) {
   const recent = posts.slice(0, site.build?.postsPerHomePage || 12);
 
   return `
-<main class="home">
+<main class="home" id="main-content">
   <section class="hero">
     <h1 class="hero-title">Hi, I'm ${escapeHtml(site.author?.handle || site.author?.name || site.title)}</h1>
     <p class="hero-subtitle">${escapeHtml(site.description)}</p>
@@ -39,9 +39,9 @@ export function renderHome({ posts, site }) {
 function renderEntry(post, bp) {
   return `
   <article class="post-entry" data-prefetch>
-    <h3 class="post-entry-title">
+    <h2 class="post-entry-title">
       <a href="${bp}/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
-    </h3>
+    </h2>
     <div class="post-entry-meta">
       Published: ${formatDate(post.date, 'short')}${post.readingTime ? ` • ${post.readingTime} min read` : ''}
     </div>

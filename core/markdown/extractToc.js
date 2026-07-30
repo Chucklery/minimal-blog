@@ -81,5 +81,5 @@ export function renderTocHtml(toc) {
       )
       .join('');
 
-  return `<nav class="toc" data-toc><ul>${renderItems(toc)}</ul></nav>`;
+  return `<nav class="toc" data-toc aria-label="文章章节"><ul>${renderItems(toc)}</ul></nav>`;
 }

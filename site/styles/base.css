@@ -59,6 +59,25 @@
     border-radius: var(--radius-sm);
   }
 
+  .skip-link {
+    position: fixed;
+    top: var(--space-3);
+    left: var(--space-3);
+    z-index: 1000;
+    padding: var(--space-2) var(--space-4);
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    transform: translateY(calc(-100% - var(--space-6)));
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
   /* ── 滚动条（暗色模式适配） ── */
   ::-webkit-scrollbar {
     width: 6px;

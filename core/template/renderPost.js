@@ -4,11 +4,21 @@
 import { formatDate } from '../utils/dates.js';
 import { escapeAttr } from '../utils/escapeHtml.js';
 
-export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, site }) {
+export function renderPost({
+  post,
+  htmlBody,
+  tocHtml = '',
+  prevPost,
+  nextPost,
+  relatedPosts = [],
+  site,
+}) {
   const bp = site.basePath || '';
   const hasToc = tocHtml && tocHtml.length > 0;
   const tagHtml = post.tags && post.tags.length > 0
-    ? post.tags.map((t) => `<span class="post-tag">#${escapeHtml(t)}</span>`).join(' ')
+    ? post.tags
+        .map((t) => `<a class="post-tag" href="${bp}/tags/${encodeURIComponent(t.toLowerCase())}/">#${escapeHtml(t)}</a>`)
+        .join(' ')
     : '';
 
   return `
@@ -31,7 +41,7 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
   </div>
 </div>
 
-<main class="post">
+<main class="post" id="main-content">
   <article class="post-article ${hasToc ? 'post-article--with-toc' : ''}">
     ${hasToc ? `
     <details class="post-toc-inline" data-inline-toc>
@@ -46,8 +56,10 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
       ${htmlBody}
     </div>
 
+    ${renderRelatedPosts(relatedPosts, bp)}
+
     <footer class="post-footer">
-      <nav class="post-nav">
+      <nav class="post-nav" aria-label="相邻文章">
         ${prevPost
           ? `<a href="${bp}/posts/${escapeAttr(prevPost.slug)}.html" class="post-nav-prev"> ← ${escapeHtml(prevPost.title)}</a>`
           : '<span></span>'}
@@ -59,10 +71,30 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
   </article>
 
   ${hasToc ? `
-  <aside class="post-toc">
+  <aside class="post-toc" aria-label="文章目录">
     <div class="toc-sticky">${tocHtml}</div>
   </aside>` : ''}
 </main>`;
+}
+
+function renderRelatedPosts(posts, bp) {
+  if (!posts.length) return '';
+
+  return `
+    <aside class="related-posts" aria-labelledby="related-posts-title">
+      <h2 id="related-posts-title">相关文章</h2>
+      <ul>
+        ${posts
+          .map(
+            (post) => `
+        <li>
+          <a href="${bp}/posts/${escapeAttr(post.slug)}.html">${escapeHtml(post.title)}</a>
+          <span>${post.sharedTags.map((tag) => `#${escapeHtml(tag)}`).join(' ')}</span>
+        </li>`
+          )
+          .join('')}
+      </ul>
+    </aside>`;
 }
 
 function escapeHtml(str) {

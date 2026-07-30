@@ -105,13 +105,26 @@
   .post-cover-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-4);
+    gap: var(--space-2);
     font-size: 0.88em;
     color: var(--muted);
   }
 
   .post-tag {
+    padding: 0.15em 0.45em;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
     border-bottom: none;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+
+  .post-tag:hover {
+    color: var(--text);
+    border-color: color-mix(in srgb, var(--text) 24%, transparent);
   }
 
   /* ── 文章正文区：小屏铺满，宽屏保持舒适行长并为目录留位 ── */
@@ -251,6 +264,11 @@
   .toc-sticky {
     position: sticky;
     top: var(--space-12);
+    max-height: calc(100vh - var(--space-24));
+    padding-right: var(--space-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 
   .toc ul {
@@ -277,6 +295,58 @@
   .toc .toc-level-h3 a {
     padding-left: var(--space-4);
     font-size: 0.82em;
+  }
+
+  .post-toc .toc-level-h2 > ul {
+    display: none;
+  }
+
+  .post-toc .toc-level-h2.toc-section-active > ul,
+  .post-toc .toc-level-h2:focus-within > ul,
+  .post-toc .toc-level-h2:hover > ul {
+    display: block;
+  }
+
+  /* ── 相关文章 ── */
+  .related-posts {
+    margin-top: var(--space-16);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--line);
+    font-family: var(--font-sans);
+  }
+
+  .related-posts h2 {
+    margin-bottom: var(--space-4);
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .related-posts ul {
+    padding: 0;
+    list-style: none;
+  }
+
+  .related-posts li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .related-posts li:last-child {
+    border-bottom: none;
+  }
+
+  .related-posts a {
+    border-bottom: none;
+    line-height: 1.4;
+  }
+
+  .related-posts li > span {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 0.75em;
   }
 
   /* ── 阅读进度条 ── */
@@ -637,6 +707,11 @@
   @media (max-width: 640px) {
     .prose pre {
       -webkit-overflow-scrolling: touch;
+    }
+
+    .related-posts li {
+      flex-direction: column;
+      gap: var(--space-1);
     }
   }
 }

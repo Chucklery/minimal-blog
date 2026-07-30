@@ -18,13 +18,13 @@ export function renderArchive({ posts, site }) {
   const tagCloud = buildTagCloud(posts, bp);
 
   return `
-<main class="archive">
+<main class="archive" id="main-content">
   <header class="archive-header">
     <h1>Archive</h1>
     <p>${posts.length} posts</p>
   </header>
 
-  ${tagCloud ? `<nav class="tag-cloud">${tagCloud}</nav>` : ''}
+  ${tagCloud ? `<nav class="tag-cloud" aria-label="文章标签">${tagCloud}</nav>` : ''}
 
   <div class="archive-list">
     ${years
@@ -69,7 +69,7 @@ function buildTagCloud(posts, bp) {
       let cls = 'tag-cloud-sm';
       if (count >= 5) cls = 'tag-cloud-lg';
       else if (count >= 2) cls = 'tag-cloud-md';
-      return `<a href="${bp}/tags/${key}/" class="tag-cloud-link ${cls}">#${escapeHtml(label)}</a>`;
+      return `<a href="${bp}/tags/${encodeURIComponent(key)}/" class="tag-cloud-link ${cls}">#${escapeHtml(label)}</a>`;
     })
     .join(' ');
 }

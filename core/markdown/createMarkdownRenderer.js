@@ -51,6 +51,8 @@ export async function createMarkdownRenderer() {
   md.renderer.rules.fence = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
     const lang = token.info ? token.info.trim().split(/\s+/)[0] : 'text';
+    const languageLabel = getLanguageLabel(lang);
+    const languageAttrs = ` data-language="${md.utils.escapeHtml(languageLabel)}" aria-label="${md.utils.escapeHtml(languageLabel)} code block"`;
 
     // 先调用原始 fence，获取不含高亮的 <code>
     const code = defaultFence
@@ -62,12 +64,28 @@ export async function createMarkdownRenderer() {
         lang,
         themes: { light: 'github-light', dark: 'github-dark' },
       });
-      return highlighted;
+      return highlighted.replace('<pre', `<pre${languageAttrs}`);
     } catch {
       // 不支持的语言直接返回原始代码
-      return code;
+      return code.replace('<pre', `<pre${languageAttrs}`);
     }
   };
 
   return md;
+}
+
+function getLanguageLabel(lang) {
+  const labels = {
+    js: 'JavaScript',
+    javascript: 'JavaScript',
+    ts: 'TypeScript',
+    typescript: 'TypeScript',
+    py: 'Python',
+    sh: 'Shell',
+    bash: 'Shell',
+    shell: 'Shell',
+    md: 'Markdown',
+    text: 'Text',
+  };
+  return labels[lang.toLowerCase()] || lang.toUpperCase();
 }

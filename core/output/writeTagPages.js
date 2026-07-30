@@ -33,6 +33,7 @@ export async function writeTagPages({ posts, site, renderTagPage, renderLayout, 
   await mkdir(join(DIST_DIR, 'tags'), { recursive: true });
 
   for (const [key, { label, posts: tagPosts }] of tagMap) {
+    const encodedKey = encodeURIComponent(key);
     const bodyContent = renderTagPage({ tag: label, posts: tagPosts, site });
     let html = renderLayout({
       site,
@@ -40,7 +41,7 @@ export async function writeTagPages({ posts, site, renderTagPage, renderLayout, 
       title: `#${label}`,
       description: `${tagPosts.length} article${tagPosts.length > 1 ? 's' : ''} tagged "${label}"`,
       bodyContent,
-      canonicalUrl: `${site.baseUrl}/tags/${key}/`,
+      canonicalUrl: `${site.baseUrl}/tags/${encodedKey}/`,
     });
 
     if (site.build?.minifyHtml && minify) {
@@ -52,7 +53,7 @@ export async function writeTagPages({ posts, site, renderTagPage, renderLayout, 
       });
     }
 
-    await writePage(`tags/${key}/index.html`, html);
+    await writePage(`tags/${encodedKey}/index.html`, html);
   }
 
   console.log(`  Tags: ${tagMap.size} pages → dist/tags/`);

@@ -8,7 +8,7 @@ export function renderTagPage({ tag, posts, site }) {
   const bp = site.basePath || '';
 
   return `
-<main class="tag-page">
+<main class="tag-page" id="main-content">
   <header class="tag-header">
     <a href="${bp}/archive/" class="tag-back">← Archive</a>
     <h1>#${escapeHtml(tag)}</h1>

@@ -12,7 +12,7 @@ import { escapeHtml } from '../utils/escapeHtml.js';
  */
 export function renderAbout({ htmlBody, site }) {
   return `
-<main class="about">
+<main class="about" id="main-content">
   <article class="about-article">
     <header class="about-header">
       <h1>About</h1>

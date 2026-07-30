@@ -80,6 +80,7 @@ async function build() {
 
     const prevPost = i < posts.length - 1 ? posts[i + 1] : null;
     const nextPost = i > 0 ? posts[i - 1] : null;
+    const relatedPosts = findRelatedPosts(post, posts);
 
     const bodyContent = renderPost({
       post,
@@ -87,6 +88,7 @@ async function build() {
       tocHtml,
       prevPost,
       nextPost,
+      relatedPosts,
       site,
     });
 
@@ -234,3 +236,17 @@ build().catch((err) => {
   console.error('\n❌ Build failed:', err);
   process.exit(1);
 });
+
+function findRelatedPosts(currentPost, posts, limit = 3) {
+  const currentTags = new Set((currentPost.tags || []).map((tag) => tag.toLowerCase()));
+
+  return posts
+    .filter((post) => post.slug !== currentPost.slug)
+    .map((post) => {
+      const sharedTags = (post.tags || []).filter((tag) => currentTags.has(tag.toLowerCase()));
+      return { ...post, sharedTags, relatedScore: sharedTags.length };
+    })
+    .filter((post) => post.relatedScore > 0)
+    .sort((a, b) => b.relatedScore - a.relatedScore || b.date - a.date)
+    .slice(0, limit);
+}

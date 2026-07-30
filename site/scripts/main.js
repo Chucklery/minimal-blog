@@ -145,10 +145,17 @@ function initTocHighlight() {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           tocLinks.forEach((l) => l.classList.remove('active'));
+          document
+            .querySelectorAll('[data-toc] .toc-section-active')
+            .forEach((item) => item.classList.remove('toc-section-active'));
           const activeLinks = document.querySelectorAll(
             `[data-toc] a[href="#${entry.target.id}"]`
           );
-          activeLinks.forEach((link) => link.classList.add('active'));
+          activeLinks.forEach((link) => {
+            link.classList.add('active');
+            const section = link.closest('.toc-level-h2') || link.parentElement?.closest('.toc-level-h2');
+            section?.classList.add('toc-section-active');
+          });
         }
       }
     },

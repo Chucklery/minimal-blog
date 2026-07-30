@@ -17,6 +17,7 @@ import { renderThemeToggle } from './renderThemeToggle.js';
  * @param {string} [opts.canonicalUrl]
  * @param {string} [opts.ogImage]
  * @param {string} [opts.publishedDate]
+ * @param {boolean} [opts.noindex]
  * @param {boolean} [opts.showProgress] - 是否显示阅读进度条
  * @param {string} [opts.tocHtml] - 文章页 TOC
  * @returns {string}
@@ -30,20 +31,27 @@ export function renderLayout({
   canonicalUrl,
   ogImage,
   publishedDate,
+  noindex = false,
   showProgress = false,
   hideHeader = false,
   tocHtml = '',
 }) {
   const fullTitle = page === 'home' ? site.title : `${title} — ${site.title}`;
   const ogType = page === 'post' ? 'article' : 'website';
+  const resolvedOgImage = ogImage || site.socialImage;
 
   const meta = renderMeta({
     title: fullTitle,
     description,
     canonicalUrl,
-    ogImage,
+    ogImage: resolvedOgImage,
     ogType,
     publishedDate,
+    siteName: site.title,
+    authorName: site.author?.name,
+    language: site.language,
+    noindex,
+    contentTitle: title,
   });
 
   const bp = site.basePath || '';
@@ -72,13 +80,14 @@ ${meta}
   </script>
 </head>
 <body class="page-${page}">
+  <a class="skip-link" href="#main-content">跳到正文</a>
   ${showProgress ? '<div class="progress" data-progress></div>' : ''}
 
   ${hideHeader ? '' : `
   <header class="site-header">
     <div class="header-inner">
       <a href="${bp}/" class="site-name">${escapeHtml(site.title)}</a>
-      <nav class="site-nav">
+      <nav class="site-nav" aria-label="主导航">
         <a href="${bp}/">Posts</a>
         <a href="${bp}/archive/">Archive</a>
         <a href="${bp}/search/">Search</a>
