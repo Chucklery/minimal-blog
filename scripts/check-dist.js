@@ -1,7 +1,7 @@
 // scripts/check-dist.js
 // 构建产物校验
 
-import { stat, readdir } from 'node:fs/promises';
+import { stat, readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createReadStream } from 'node:fs';
 import { createGzip } from 'node:zlib';
@@ -61,6 +61,32 @@ async function check() {
       passed++;
     } catch {
       console.log(`  ❌ ${file} — MISSING`);
+      failed++;
+    }
+  }
+
+  // 生产构建时校验 RSS 内所有站点链接，避免泄漏 localhost 或遗漏子路径
+  if (process.env.SITE_URL) {
+    const expectedBase = `${process.env.SITE_URL.replace(/\/+$/, '')}/`;
+    const rss = await readFile(join(DIST_DIR, 'rss.xml'), 'utf-8');
+    const rssUrls = [
+      ...[...rss.matchAll(/<(?:link|guid)(?:\s[^>]*)?>([^<]+)<\/(?:link|guid)>/g)]
+        .map((match) => match[1]),
+      ...[...rss.matchAll(/<atom:link\s[^>]*href="([^"]+)"/g)]
+        .map((match) => match[1]),
+    ];
+    const invalidUrls = rssUrls.filter((url) => !url.startsWith(expectedBase));
+
+    if (
+      rssUrls.length > 0 &&
+      invalidUrls.length === 0 &&
+      rss.includes(`<atom:link href="${expectedBase}rss.xml"`)
+    ) {
+      console.log(`  ✅ rss.xml: ${rssUrls.length} production links`);
+      passed++;
+    } else {
+      console.log(`  ❌ rss.xml — INVALID PRODUCTION LINKS`);
+      invalidUrls.forEach((url) => console.log(`     ${url}`));
       failed++;
     }
   }

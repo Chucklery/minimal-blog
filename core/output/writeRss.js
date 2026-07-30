@@ -3,7 +3,7 @@
 
 import { writeFile } from 'node:fs/promises';
 import { DIST_DIR } from '../utils/paths.js';
-import { toUTCString, formatDate } from '../utils/dates.js';
+import { toUTCString } from '../utils/dates.js';
 import { escapeHtml } from '../utils/escapeHtml.js';
 import { join } from 'node:path';
 
@@ -15,26 +15,32 @@ import { join } from 'node:path';
  * @returns {Promise<void>}
  */
 export async function writeRss({ posts, site }) {
+  const siteUrl = `${site.baseUrl.replace(/\/+$/, '')}/`;
+  const feedUrl = new URL('rss.xml', siteUrl).href;
+
   const items = posts.slice(0, 20).map(
-    (post) => `
+    (post) => {
+      const postUrl = new URL(`posts/${encodeURIComponent(post.slug)}.html`, siteUrl).href;
+      return `
     <item>
-      <title><![CDATA[${post.title}]]></title>
-      <link>${site.baseUrl}/posts/${post.slug}.html</link>
-      <guid isPermaLink="true">${site.baseUrl}/posts/${post.slug}.html</guid>
-      <description><![CDATA[${post.description}]]></description>
+      <title><![CDATA[${toCdata(post.title)}]]></title>
+      <link>${escapeHtml(postUrl)}</link>
+      <guid isPermaLink="true">${escapeHtml(postUrl)}</guid>
+      <description><![CDATA[${toCdata(post.description)}]]></description>
       <pubDate>${toUTCString(post.date)}</pubDate>
-    </item>`
+    </item>`;
+    }
   );
 
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeHtml(site.title)}</title>
-    <link>${site.baseUrl}</link>
+    <link>${escapeHtml(siteUrl)}</link>
     <description>${escapeHtml(site.description)}</description>
     <language>${site.language || 'zh-CN'}</language>
     <lastBuildDate>${toUTCString(new Date())}</lastBuildDate>
-    <atom:link href="${site.baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${escapeHtml(feedUrl)}" rel="self" type="application/rss+xml"/>
     ${items.join('')}
   </channel>
 </rss>`;
@@ -42,4 +48,8 @@ export async function writeRss({ posts, site }) {
   const outPath = join(DIST_DIR, 'rss.xml');
   await writeFile(outPath, rss, 'utf-8');
   console.log('  RSS: dist/rss.xml');
+}
+
+function toCdata(value) {
+  return String(value || '').replaceAll(']]>', ']]]]><![CDATA[>');
 }

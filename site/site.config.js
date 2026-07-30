@@ -2,22 +2,25 @@
 // 站点配置 — 所有站点级别的差异都在这里
 // 换一个 site 时，只改这个文件和 content/、styles/、public/
 
+const baseUrl = (process.env.SITE_URL || 'http://localhost:8088').replace(/\/+$/, '');
+const basePath = (process.env.BASE_PATH || '').replace(/\/+$/, '');
+
 export default {
   // 站点基础信息
   title: "Chuckle's Blog",
   description: 'Writing about code, design, and the spaces between.',
   language: 'zh-CN',
-  baseUrl: 'http://localhost:8088',
+  baseUrl,
 
-  // GitHub Pages 部署路径（本地留空，GitHub Actions 自动注入）
-  basePath: '',
+  // 本地默认留空，GitHub Actions 构建时注入仓库子路径
+  basePath,
 
   // 作者信息
   author: {
     name: 'Chuckle',
     handle: 'Chuckle',
-    url: 'http://localhost:8088/about/',
-    avatar: '/avatar.svg',
+    url: `${baseUrl}/about/`,
+    avatar: `${basePath}/avatar.svg`,
   },
 
   // 路由前缀

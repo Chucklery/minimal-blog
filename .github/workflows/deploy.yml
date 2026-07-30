@@ -24,12 +24,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # 注入 basePath（仓库名），使 /assets/... 在 GitHub Pages 上正确解析
-      - run: |
-          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-          sed -i "s|basePath: ''|basePath: '/${REPO_NAME}'|" site/site.config.js
-
-      - run: pnpm build
+      - name: Build for GitHub Pages
+        run: pnpm build && pnpm check
+        env:
+          SITE_URL: https://chucklery.github.io/minimal-blog
+          BASE_PATH: /minimal-blog
 
       - uses: peaceiris/actions-gh-pages@v4
         with:

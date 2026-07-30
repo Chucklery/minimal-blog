@@ -4,6 +4,7 @@
 import { formatDate } from '../utils/dates.js';
 import { escapeAttr } from '../utils/escapeHtml.js';
 import { renderMeta } from './renderMeta.js';
+import { renderThemeToggle } from './renderThemeToggle.js';
 
 /**
  * 生成完整的 HTML 页面
@@ -82,10 +83,7 @@ ${meta}
         <a href="${bp}/archive/">Archive</a>
         <a href="${bp}/search/">Search</a>
         <a href="${bp}/about/">About</a>
-        <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
-          <span class="theme-icon-light">☽</span>
-          <span class="theme-icon-dark">☀</span>
-        </button>
+        ${renderThemeToggle()}
       </nav>
     </div>
   </header>`}

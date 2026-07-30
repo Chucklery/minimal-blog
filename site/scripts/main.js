@@ -19,18 +19,31 @@ function toggleTheme() {
   const next = current === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
   localStorage.setItem('theme', next);
+  syncThemeToggle(next);
+}
+
+function syncThemeToggle(theme) {
+  const btn = document.querySelector('[data-theme-toggle]');
+  if (!btn) return;
+
+  const isDark = theme === 'dark';
+  btn.setAttribute('aria-pressed', String(isDark));
+  btn.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
 }
 
 function bindThemeToggle() {
   const btn = document.querySelector('[data-theme-toggle]');
   if (btn) {
+    syncThemeToggle(document.documentElement.getAttribute('data-theme'));
     btn.addEventListener('click', toggleTheme);
   }
 
   // 监听系统主题变化
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
     if (!localStorage.getItem('theme')) {
-      document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      const theme = e.matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      syncThemeToggle(theme);
     }
   });
 }
