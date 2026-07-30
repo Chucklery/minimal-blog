@@ -20,6 +20,7 @@ export async function writeSearchIndex({ posts }) {
     description: p.description,
     date: formatDate(p.date, 'iso'),
     tags: p.tags || [],
+    content: normalizeMarkdown(p.rawContent),
   }));
 
   const json = JSON.stringify(index);
@@ -27,4 +28,15 @@ export async function writeSearchIndex({ posts }) {
 
   const sizeKB = (json.length / 1024).toFixed(1);
   console.log(`  Search index: dist/assets/search-index.json (${sizeKB}KB)`);
+}
+
+function normalizeMarkdown(markdown) {
+  return String(markdown)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[*_~`>|-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

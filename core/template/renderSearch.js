@@ -4,7 +4,7 @@
 export function renderSearch({ site }) {
   const bp = site.basePath || '';
   return `
-<main class="search-page">
+<main class="search-page" id="main-content">
   <section class="search-hero">
     <h1>Search</h1>
     <div class="search-box">
@@ -15,12 +15,16 @@ export function renderSearch({ site }) {
         class="search-input"
         placeholder="Search posts..."
         autocomplete="off"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="search-results"
+        aria-expanded="false"
         autofocus
       >
     </div>
   </section>
 
-  <section class="search-results" id="search-results">
+  <section class="search-results" id="search-results" aria-live="polite" aria-atomic="false">
     <p class="search-empty">Type to search ${site.title}...</p>
   </section>
 </main>

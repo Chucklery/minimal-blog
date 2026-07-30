@@ -591,6 +591,24 @@
     border-bottom: 1px solid var(--line);
   }
 
+  .search-result-list {
+    border-top: 1px solid var(--line);
+  }
+
+  .search-result.is-active {
+    margin-inline: calc(var(--space-3) * -1);
+    padding-inline: var(--space-3);
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+  }
+
+  .search-result mark {
+    color: inherit;
+    background: var(--accent-soft);
+    border-radius: 2px;
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+
   .search-result-title {
     font-size: var(--text-lg);
     font-weight: 600;
