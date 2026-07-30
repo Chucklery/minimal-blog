@@ -33,6 +33,15 @@ export function renderPost({ post, htmlBody, tocHtml = '', prevPost, nextPost, s
 
 <main class="post">
   <article class="post-article ${hasToc ? 'post-article--with-toc' : ''}">
+    ${hasToc ? `
+    <details class="post-toc-inline" data-inline-toc>
+      <summary>
+        <span>文章目录</span>
+        <span class="post-toc-hint">快速跳转</span>
+      </summary>
+      <div class="post-toc-inline-content">${tocHtml}</div>
+    </details>` : ''}
+
     <div class="prose">
       ${htmlBody}
     </div>

@@ -124,10 +124,10 @@ function initTocHighlight() {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           tocLinks.forEach((l) => l.classList.remove('active'));
-          const active = document.querySelector(
+          const activeLinks = document.querySelectorAll(
             `[data-toc] a[href="#${entry.target.id}"]`
           );
-          if (active) active.classList.add('active');
+          activeLinks.forEach((link) => link.classList.add('active'));
         }
       }
     },
@@ -135,6 +135,17 @@ function initTocHighlight() {
   );
 
   headings.forEach((h) => observer.observe(h.el));
+}
+
+function initInlineToc() {
+  const inlineToc = document.querySelector('[data-inline-toc]');
+  if (!inlineToc) return;
+
+  inlineToc.addEventListener('click', (event) => {
+    if (event.target.closest('a[href^="#"]')) {
+      inlineToc.removeAttribute('open');
+    }
+  });
 }
 
 // =============================================================================
@@ -221,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initProgressBar();
   initCodeCopy();
   initTocHighlight();
+  initInlineToc();
   initPrefetch();
   initBackToTop();
 });

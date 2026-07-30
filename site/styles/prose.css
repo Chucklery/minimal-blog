@@ -39,6 +39,11 @@
     line-height: 1.25;
   }
 
+  .prose h2[id],
+  .prose h3[id] {
+    scroll-margin-top: var(--space-6);
+  }
+
   /* ── 内联代码 ── */
   .prose :not(pre) > code {
     font-family: var(--font-mono);

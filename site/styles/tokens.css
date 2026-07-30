@@ -29,7 +29,7 @@
 
     /* ── 页面边距（flex 页面，全宽度连续适配） ── */
     --page-gutter:     clamp(20px, 5vw, 8rem);
-    --post-gutter:     clamp(16px, 4vw, 64px);
+    --post-gutter:     clamp(20px, 4vw, 64px);
 
     /* ── 间距（垂直节奏，基于 16px 根字号） ── */
     --space-1: 4px;
