@@ -14,6 +14,9 @@ import { join } from 'node:path';
  * @returns {Promise<void>}
  */
 export async function writeSitemap({ posts, site }) {
+  const tagKeys = new Set(
+    posts.flatMap((post) => (post.tags || []).map((tag) => tag.toLowerCase()))
+  );
   const urls = [
     { loc: site.baseUrl, priority: '1.0', changefreq: 'daily' },
     { loc: `${site.baseUrl}/archive/`, priority: '0.7' },
@@ -22,6 +25,10 @@ export async function writeSitemap({ posts, site }) {
       loc: `${site.baseUrl}/posts/${p.slug}.html`,
       priority: '0.8',
       lastmod: formatDate(p.date, 'iso'),
+    })),
+    ...[...tagKeys].map((tag) => ({
+      loc: `${site.baseUrl}/tags/${encodeURIComponent(tag)}/`,
+      priority: '0.5',
     })),
   ];
 

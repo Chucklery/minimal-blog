@@ -38,6 +38,7 @@ async function check() {
   // 必需文件
   const required = [
     'index.html',
+    '404.html',
     'rss.xml',
     'sitemap.xml',
     'archive/index.html',
@@ -49,8 +50,10 @@ async function check() {
     'assets/prose.css',
     'assets/components.css',
     'assets/main.js',
+    'assets/search-page.js',
     'search/index.html',
     'assets/search-index.json',
+    'og/default.jpg',
   ];
 
   for (const file of required) {
@@ -132,8 +135,38 @@ async function check() {
     const htmlFiles = postFiles.filter((f) => f.endsWith('.html'));
     console.log(`  ✅ posts/: ${htmlFiles.length} html files`);
     passed++;
+
+    const socialFiles = await readdir(join(DIST_DIR, 'assets', 'og'));
+    const socialImages = socialFiles.filter((file) => file.endsWith('.jpg'));
+    if (socialImages.length === htmlFiles.length) {
+      console.log(`  ✅ social images: ${socialImages.length} article cards`);
+      passed++;
+    } else {
+      console.log(`  ❌ social images — expected ${htmlFiles.length}, found ${socialImages.length}`);
+      failed++;
+    }
   } catch {
     console.log(`  ❌ posts/ — MISSING`);
+    failed++;
+  }
+
+  const searchIndex = JSON.parse(
+    await readFile(join(DIST_DIR, 'assets', 'search-index.json'), 'utf-8')
+  );
+  if (searchIndex.length > 0 && searchIndex.every((post) => typeof post.content === 'string')) {
+    console.log(`  ✅ search index: full-text content included`);
+    passed++;
+  } else {
+    console.log(`  ❌ search index — full-text content missing`);
+    failed++;
+  }
+
+  const sitemap = await readFile(join(DIST_DIR, 'sitemap.xml'), 'utf-8');
+  if (sitemap.includes('/tags/')) {
+    console.log(`  ✅ sitemap.xml: tag pages included`);
+    passed++;
+  } else {
+    console.log(`  ❌ sitemap.xml — tag pages missing`);
     failed++;
   }
 

@@ -703,6 +703,90 @@
     margin: 0;
   }
 
+  /* ── 404 ── */
+  .not-found {
+    width: min(100% - (var(--page-gutter) * 2), 42rem);
+    margin: var(--space-24) auto;
+  }
+
+  .not-found-code {
+    margin-bottom: var(--space-2);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+
+  .not-found h1 {
+    margin-bottom: var(--space-4);
+    font-size: var(--text-xl);
+    letter-spacing: -0.04em;
+  }
+
+  .not-found-desc {
+    max-width: 34rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .not-found-search {
+    margin: var(--space-12) 0;
+  }
+
+  .not-found-search > label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--muted);
+    font-size: 0.82em;
+    font-weight: 500;
+  }
+
+  .not-found-search > div {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .not-found-search input {
+    min-width: 0;
+    flex: 1;
+    padding: var(--space-3) var(--space-4);
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+  }
+
+  .not-found-search button {
+    padding: var(--space-3) var(--space-4);
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  .not-found-recent {
+    margin-bottom: var(--space-8);
+  }
+
+  .not-found-recent h2 {
+    margin-bottom: var(--space-3);
+    font-size: 0.9em;
+  }
+
+  .not-found-recent ul {
+    padding: 0;
+    list-style: none;
+  }
+
+  .not-found-recent li {
+    padding: var(--space-2) 0;
+  }
+
+  .not-found-home {
+    color: var(--muted);
+  }
+
   /* 小屏设备：代码块启用惯性滚动 */
   @media (max-width: 640px) {
     .prose pre {

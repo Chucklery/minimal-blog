@@ -18,12 +18,14 @@ import { renderArchive } from '../core/template/renderArchive.js';
 import { renderAbout } from '../core/template/renderAbout.js';
 import { renderSearch } from '../core/template/renderSearch.js';
 import { renderTagPage } from '../core/template/renderTagPage.js';
+import { renderNotFound } from '../core/template/renderNotFound.js';
 import { cleanDist } from '../core/output/cleanDist.js';
 import { writePage } from '../core/output/writePage.js';
 import { writeRss } from '../core/output/writeRss.js';
 import { writeSitemap } from '../core/output/writeSitemap.js';
 import { writeSearchIndex } from '../core/output/writeSearchIndex.js';
 import { writeTagPages } from '../core/output/writeTagPages.js';
+import { writeSocialImages } from '../core/output/writeSocialImages.js';
 import { buildCss } from '../core/assets/buildCss.js';
 import { buildJs } from '../core/assets/buildJs.js';
 import { buildImages } from '../core/assets/buildImages.js';
@@ -99,6 +101,7 @@ async function build() {
       description: post.description,
       bodyContent,
       canonicalUrl: `${site.baseUrl}/posts/${post.slug}.html`,
+      ogImage: `${site.baseUrl}/assets/og/${post.slug}.jpg`,
       publishedDate: post.date.toISOString().split('T')[0],
       showProgress: true,
       tocHtml,
@@ -201,28 +204,50 @@ async function build() {
     await writePage('search/index.html', searchHtml);
   }
 
-  // 9. 构建 CSS
+  // 9. GitHub Pages 404
+  const notFoundContent = renderNotFound({ posts, site });
+  let notFoundHtml = renderLayout({
+    site,
+    page: '404',
+    title: '页面未找到',
+    description: `页面未找到 — ${site.title}`,
+    bodyContent: notFoundContent,
+    noindex: true,
+  });
+  if (site.build?.minifyHtml) {
+    notFoundHtml = await minify(notFoundHtml, {
+      collapseWhitespace: true,
+      removeComments: true,
+      minifyCSS: true,
+    });
+  }
+  await writePage('404.html', notFoundHtml);
+
+  // 10. 构建 CSS
   await buildCss();
 
-  // 10. 构建 JS（main.js + search-page.js）
+  // 11. 构建 JS（main.js + search-page.js）
   await buildJs();
 
-  // 11. 图片优化
+  // 12. 图片优化
   await buildImages();
 
-  // 12. 复制 public
+  // 13. 复制 public
   await copyPublic();
 
-  // 13. RSS
+  // 14. 社交分享图
+  await writeSocialImages({ posts });
+
+  // 15. RSS
   await writeRss({ posts, site });
 
-  // 14. Sitemap
+  // 16. Sitemap
   await writeSitemap({ posts, site });
 
-  // 15. Tag 页面
+  // 17. Tag 页面
   await writeTagPages({ posts, site, renderTagPage, renderLayout, minify });
 
-  // 16. 搜索索引
+  // 18. 搜索索引
   if (site.build?.generateSearch) {
     await writeSearchIndex({ posts, site });
   }

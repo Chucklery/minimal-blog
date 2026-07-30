@@ -11,6 +11,7 @@ export default {
   description: 'Writing about code, design, and the spaces between.',
   language: 'zh-CN',
   baseUrl,
+  socialImage: `${baseUrl}/og/default.jpg`,
 
   // 本地默认留空，GitHub Actions 构建时注入仓库子路径
   basePath,
