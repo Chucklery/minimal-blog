@@ -56,42 +56,33 @@
 
   /* ── 代码块 ── */
   .prose pre {
-    margin: 1.4em 0;
+    margin: 1.25em 0;
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: var(--code-bg);
-    border: none;
+    background: var(--code-bg) !important;
+    border: 1px solid var(--line);
     position: relative;
-    box-shadow: inset 0 0 0 1px var(--line);
     max-width: 100%;
+    box-shadow: var(--shadow-sm);
   }
 
   .prose pre.shiki {
     padding: 0 !important;
+    color: var(--text) !important;
   }
 
-  .prose pre::before {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 28px;
-    background-color: var(--surface);
-    background-image:
-      radial-gradient(circle at 16px center, #ff5f56 3.5px, transparent 4px),
-      radial-gradient(circle at 32px center, #ffbd2e 3.5px, transparent 4px),
-      radial-gradient(circle at 48px center, #27c93f 3.5px, transparent 4px);
-    background-repeat: no-repeat;
-    border-bottom: 1px solid var(--line);
-    flex-shrink: 0;
+  [data-theme="dark"] .prose pre.shiki span {
+    color: var(--shiki-dark) !important;
   }
 
   .prose pre code {
     display: block;
     width: 100%;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-4) 4.75rem var(--space-4) var(--space-4);
     background: none;
-    font-size: 0.8em;
-    line-height: 1.55;
+    overflow-x: auto;
+    font-size: 0.79em;
+    line-height: 1.6;
     tab-size: 2;
   }
 

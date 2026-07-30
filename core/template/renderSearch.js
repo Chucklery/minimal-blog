@@ -8,6 +8,7 @@ export function renderSearch({ site }) {
   <section class="search-hero">
     <h1>Search</h1>
     <div class="search-box">
+      <label for="search-input" class="search-label">Search posts</label>
       <input
         type="search"
         id="search-input"

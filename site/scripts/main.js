@@ -84,19 +84,30 @@ function initCodeCopy() {
 
     const btn = document.createElement('button');
     btn.className = 'code-copy';
+    btn.type = 'button';
     btn.textContent = 'Copy';
     btn.setAttribute('aria-label', 'Copy code');
+    btn.setAttribute('aria-live', 'polite');
 
     btn.addEventListener('click', async () => {
       const code = block.querySelector('code');
       if (!code) return;
       const text = code.textContent || '';
-      try {
-        await navigator.clipboard.writeText(text);
+
+      const showCopiedState = () => {
         btn.textContent = 'Copied';
+        btn.setAttribute('aria-label', 'Code copied to clipboard');
+        btn.dataset.state = 'copied';
         setTimeout(() => {
           btn.textContent = 'Copy';
+          btn.setAttribute('aria-label', 'Copy code');
+          delete btn.dataset.state;
         }, 1500);
+      };
+
+      try {
+        await navigator.clipboard.writeText(text);
+        showCopiedState();
       } catch {
         // Fallback for older browsers
         const textarea = document.createElement('textarea');
@@ -107,10 +118,7 @@ function initCodeCopy() {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        btn.textContent = 'Copied';
-        setTimeout(() => {
-          btn.textContent = 'Copy';
-        }, 1500);
+        showCopiedState();
       }
     });
 
