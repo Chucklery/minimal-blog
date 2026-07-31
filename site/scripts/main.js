@@ -79,6 +79,12 @@ function initProgressBar() {
 
 function initCodeCopy() {
   document.querySelectorAll('pre').forEach((block) => {
+    // Mermaid 使用 <pre> 保存待解析源码，插入按钮会污染其语法树
+    if (block.matches('.mermaid') || block.closest('[data-mermaid-diagram]')) return;
+
+    const code = block.querySelector('code');
+    if (!code) return;
+
     // 避免重复添加
     if (block.querySelector('.code-copy')) return;
 
@@ -90,8 +96,6 @@ function initCodeCopy() {
     btn.setAttribute('aria-live', 'polite');
 
     btn.addEventListener('click', async () => {
-      const code = block.querySelector('code');
-      if (!code) return;
       const text = code.textContent || '';
 
       const showCopiedState = () => {
