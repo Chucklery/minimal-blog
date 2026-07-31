@@ -1,0 +1,28 @@
+{
+  "title": "正见：在不确定世界里看清现实",
+  "slug": "right-view",
+  "description": "把《正见》的四法印重构为一套关于认知、选择、投资、工作与关系的现实操作系统。",
+  "author": "Chuckle",
+  "date": "2026-07-31",
+  "tags": ["正见", "佛学", "认知心理学", "决策", "投资", "自我成长"],
+  "draft": false,
+  "chapters": [
+    "index.md",
+    "00-preface.md",
+    "01-author.md",
+    "02-what-is-right-view.md",
+    "03-impermanence.md",
+    "04-suffering.md",
+    "05-no-self.md",
+    "06-nirvana.md",
+    "07-dependent-origination.md",
+    "08-emptiness.md",
+    "09-common-misunderstandings.md",
+    "10-modern-psychology.md",
+    "11-investing.md",
+    "12-work.md",
+    "13-relationships.md",
+    "14-practice.md",
+    "15-summary.md"
+  ]
+}
