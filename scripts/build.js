@@ -8,6 +8,7 @@ import { minify } from 'html-minifier-terser';
 import { ROOT, SITE_CONFIG } from '../core/utils/paths.js';
 import { loadPosts } from '../core/content/loadPosts.js';
 import { loadPages } from '../core/content/loadPages.js';
+import { loadBooks } from '../core/content/loadBooks.js';
 import { estimateReadingTime } from '../core/content/readingTime.js';
 import { renderMarkdown } from '../core/markdown/renderMarkdown.js';
 import { extractToc, buildTocTree, renderTocHtml } from '../core/markdown/extractToc.js';
@@ -19,6 +20,8 @@ import { renderAbout } from '../core/template/renderAbout.js';
 import { renderSearch } from '../core/template/renderSearch.js';
 import { renderTagPage } from '../core/template/renderTagPage.js';
 import { renderNotFound } from '../core/template/renderNotFound.js';
+import { renderBook } from '../core/template/renderBook.js';
+import { renderBooksIndex } from '../core/template/renderBooksIndex.js';
 import { cleanDist } from '../core/output/cleanDist.js';
 import { writePage } from '../core/output/writePage.js';
 import { writeRss } from '../core/output/writeRss.js';
@@ -60,17 +63,77 @@ async function build() {
   await cleanDist();
 
   // 2. 加载内容
-  const posts = await loadPosts();
+  const includeDrafts = process.env.INCLUDE_DRAFTS === 'true';
+  const posts = await loadPosts({ includeDrafts });
   const pages = await loadPages();
+  const books = await loadBooks({ includeDrafts });
+  site.hasBooks = books.length > 0;
   console.log(`  Posts: ${posts.length}`);
   console.log(`  Pages: ${pages.length}`);
+  console.log(`  Books: ${books.length}${includeDrafts ? ' (including drafts)' : ''}`);
 
   // 3. 计算阅读时间
   for (const post of posts) {
     post.readingTime = estimateReadingTime(post.rawContent);
   }
+  for (const book of books) {
+    book.author ||= site.author?.name || '';
+    book.readingTime = estimateReadingTime(
+      book.chapters.map((chapter) => chapter.rawContent).join('\n')
+    );
+  }
 
-  // 4. 渲染每篇文章页
+  // 4. 渲染书籍：源文件分章，输出为一个连续阅读页
+  for (const book of books) {
+    for (const chapter of book.chapters) {
+      chapter.htmlBody = await renderMarkdown(chapter.rawContent, {
+        headingIdPrefix: chapter.id,
+      });
+    }
+
+    const bookContent = renderBook({ book, site });
+    let bookHtml = renderLayout({
+      site,
+      page: 'book',
+      title: book.title,
+      description: book.description,
+      bodyContent: bookContent,
+      canonicalUrl: `${site.baseUrl}/books/${book.slug}/`,
+      ogImage: `${site.baseUrl}/assets/og/book-${book.slug}.jpg`,
+      showProgress: true,
+    });
+
+    if (site.build?.minifyHtml) {
+      bookHtml = await minify(bookHtml, {
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: true,
+      });
+    }
+    await writePage(`books/${book.slug}/index.html`, bookHtml);
+  }
+
+  if (books.length > 0) {
+    const booksIndexContent = renderBooksIndex({ books, site });
+    let booksIndexHtml = renderLayout({
+      site,
+      page: 'books',
+      title: '书架',
+      description: `Books — ${site.title}`,
+      bodyContent: booksIndexContent,
+      canonicalUrl: `${site.baseUrl}/books/`,
+    });
+    if (site.build?.minifyHtml) {
+      booksIndexHtml = await minify(booksIndexHtml, {
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: true,
+      });
+    }
+    await writePage('books/index.html', booksIndexHtml);
+  }
+
+  // 5. 渲染每篇文章页
   for (let i = 0; i < posts.length; i++) {
     const post = posts[i];
     const htmlBody = await renderMarkdown(post.rawContent);
@@ -236,20 +299,20 @@ async function build() {
   await copyPublic();
 
   // 14. 社交分享图
-  await writeSocialImages({ posts });
+  await writeSocialImages({ posts, books });
 
   // 15. RSS
   await writeRss({ posts, site });
 
   // 16. Sitemap
-  await writeSitemap({ posts, site });
+  await writeSitemap({ posts, books, site });
 
   // 17. Tag 页面
   await writeTagPages({ posts, site, renderTagPage, renderLayout, minify });
 
   // 18. 搜索索引
   if (site.build?.generateSearch) {
-    await writeSearchIndex({ posts, site });
+    await writeSearchIndex({ posts, books, site });
   }
 
   console.log(`\n✅ Build complete`);

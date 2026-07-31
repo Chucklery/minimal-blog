@@ -523,6 +523,390 @@
     }
   }
 
+  /* ── 书籍模式：分章写作，连续阅读 ── */
+  .book-cover {
+    padding: 0 var(--page-gutter);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .book-cover-inner {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: var(--space-16) 0;
+  }
+
+  .book-library-link {
+    display: inline-block;
+    margin-bottom: var(--space-12);
+    color: var(--muted);
+    border-bottom: none;
+    font-size: 0.88em;
+  }
+
+  .book-eyebrow,
+  .books-index-header > p:first-child,
+  .book-card > p:first-child {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.72em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  .book-cover h1 {
+    max-width: 18ch;
+    margin: var(--space-3) 0 var(--space-6);
+    font-size: clamp(2.2rem, 7vw, 4.6rem);
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 1.04;
+  }
+
+  .book-description {
+    max-width: 42rem;
+    color: var(--muted);
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 1.8vw, 1.2rem);
+    line-height: 1.65;
+  }
+
+  .book-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+    color: var(--muted);
+    font-size: 0.82em;
+  }
+
+  .book-meta span + span::before {
+    content: '·';
+    margin-right: var(--space-4);
+  }
+
+  .book-reader {
+    display: flex;
+    width: 100%;
+    max-width: calc(
+      var(--post-measure) + 220px + var(--space-12) +
+      var(--post-gutter) + var(--post-gutter)
+    );
+    margin: 0 auto;
+    padding: var(--space-12) var(--post-gutter) 0;
+    gap: var(--space-12);
+  }
+
+  .book-content {
+    width: 100%;
+    max-width: var(--post-measure);
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  .book-chapter {
+    padding: var(--space-12) 0 var(--space-16);
+    border-bottom: 1px solid var(--line);
+    scroll-margin-top: var(--space-6);
+  }
+
+  .book-chapter:first-of-type {
+    padding-top: var(--space-8);
+  }
+
+  .book-chapter:last-of-type {
+    border-bottom: none;
+  }
+
+  .book-chapter-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .book-chapter-header > p:first-child {
+    margin-bottom: var(--space-2);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.74em;
+    font-weight: 600;
+  }
+
+  .book-chapter-header h2 {
+    font-size: clamp(1.65rem, 4vw, 2.35rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+  }
+
+  .book-chapter-description {
+    margin-top: var(--space-3);
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .book-chapter-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-top: var(--space-12);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+    font-family: var(--font-sans);
+    font-size: 0.85em;
+  }
+
+  .book-chapter-nav a {
+    max-width: 46%;
+    color: var(--muted);
+    border-bottom: none;
+    line-height: 1.45;
+  }
+
+  .book-chapter-next {
+    text-align: right;
+  }
+
+  .book-toc-sidebar {
+    display: none;
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  .book-toc-sticky {
+    position: sticky;
+    top: var(--space-12);
+    max-height: calc(100vh - var(--space-24));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .book-toc-title {
+    margin-bottom: var(--space-4);
+    font-size: 0.82em;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .book-toc-list ol {
+    padding: 0;
+    list-style: none;
+  }
+
+  .book-toc-list a {
+    display: grid;
+    grid-template-columns: 2ch minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 0.36em 0;
+    color: var(--muted);
+    border-bottom: none;
+    font-size: 0.78em;
+    line-height: 1.4;
+  }
+
+  .book-toc-list a > span:first-child {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+  }
+
+  .book-toc-list a:hover,
+  .book-toc-list a.active {
+    color: var(--text);
+  }
+
+  .book-toc-list a.active > span:first-child {
+    color: var(--accent);
+  }
+
+  .book-toc-mobile {
+    margin-bottom: var(--space-8);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-sans);
+  }
+
+  .book-toc-mobile summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.86em;
+    font-weight: 600;
+  }
+
+  .book-toc-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .book-toc-mobile summary > span:last-child {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .book-toc-mobile .book-toc-list {
+    max-height: min(55vh, 28rem);
+    padding: var(--space-3) 0 var(--space-4);
+    border-top: 1px solid var(--line);
+    overflow-y: auto;
+  }
+
+  .book-resume {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+    padding: var(--space-4);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+  }
+
+  .book-resume[hidden] {
+    display: none;
+  }
+
+  .book-resume strong,
+  .book-resume span {
+    display: block;
+  }
+
+  .book-resume strong {
+    font-size: 0.84em;
+  }
+
+  .book-resume span {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.76em;
+  }
+
+  .book-resume button {
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .book-reading-status {
+    position: fixed;
+    bottom: max(var(--space-4), env(safe-area-inset-bottom));
+    left: 50%;
+    z-index: 40;
+    padding: 0.4em 0.8em;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.72em;
+    line-height: 1.2;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  @media (min-width: 1200px) {
+    .book-toc-mobile {
+      display: none;
+    }
+
+    .book-toc-sidebar {
+      display: block;
+    }
+  }
+
+  /* ── 书架 ── */
+  .books-index {
+    max-width: var(--measure);
+    margin: var(--space-16) auto;
+    padding: 0 var(--page-gutter);
+  }
+
+  .books-index-header {
+    margin-bottom: var(--space-12);
+  }
+
+  .books-index-header h1 {
+    margin: var(--space-2) 0;
+    font-size: var(--text-xl);
+    letter-spacing: -0.04em;
+  }
+
+  .books-index-header > p:last-child {
+    color: var(--muted);
+  }
+
+  .books-grid {
+    border-top: 1px solid var(--line);
+  }
+
+  .book-card {
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .book-card h2 {
+    margin: var(--space-2) 0 var(--space-3);
+    font-size: var(--text-lg);
+    letter-spacing: -0.03em;
+  }
+
+  .book-card h2 a {
+    border-bottom: none;
+  }
+
+  .book-card > p:nth-child(3) {
+    max-width: 42rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .book-card > div {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    color: var(--muted);
+    font-size: 0.78em;
+  }
+
+  @media (max-width: 640px) {
+    .book-cover-inner {
+      padding: var(--space-12) 0;
+    }
+
+    .book-library-link {
+      margin-bottom: var(--space-8);
+    }
+
+    .book-reader {
+      padding-top: var(--space-8);
+    }
+
+    .book-chapter {
+      padding: var(--space-8) 0 var(--space-12);
+    }
+
+    .book-chapter-nav {
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .book-chapter-nav a {
+      max-width: 100%;
+    }
+
+    .book-chapter-next {
+      text-align: left;
+    }
+  }
+
   /* ── Tag 云 ── */
   .tag-cloud {
     display: flex;

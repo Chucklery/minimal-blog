@@ -18,9 +18,11 @@ async function getRenderer() {
 /**
  * 渲染 Markdown 为 HTML
  * @param {string} content - 原始 Markdown
+ * @param {Object} [options]
+ * @param {string} [options.headingIdPrefix] - 多章节合并时避免标题 ID 冲突
  * @returns {Promise<string>} HTML 字符串
  */
-export async function renderMarkdown(content) {
+export async function renderMarkdown(content, { headingIdPrefix = '' } = {}) {
   const md = await getRenderer();
   const env = {};
   const tokens = md.parse(content, env);
@@ -33,7 +35,8 @@ export async function renderMarkdown(content) {
     const headingText = tokens[index + 1]?.content || '';
     const baseId = slugifyHeading(headingText) || `section-${index + 1}`;
     const duplicateIndex = usedIds.get(baseId) || 0;
-    const id = duplicateIndex === 0 ? baseId : `${baseId}-${duplicateIndex + 1}`;
+    const localId = duplicateIndex === 0 ? baseId : `${baseId}-${duplicateIndex + 1}`;
+    const id = headingIdPrefix ? `${headingIdPrefix}-${localId}` : localId;
 
     usedIds.set(baseId, duplicateIndex + 1);
     token.attrSet('id', id);

@@ -16,6 +16,7 @@ export const SITE_CONFIG = join(SITE_DIR, 'site.config.js');
 export const CONTENT_DIR = join(SITE_DIR, 'content');
 export const POSTS_DIR = join(CONTENT_DIR, 'posts');
 export const PAGES_DIR = join(CONTENT_DIR, 'pages');
+export const BOOKS_DIR = join(CONTENT_DIR, 'books');
 export const STYLES_DIR = join(SITE_DIR, 'styles');
 export const SCRIPTS_DIR = join(SITE_DIR, 'scripts');
 export const PUBLIC_DIR = join(SITE_DIR, 'public');

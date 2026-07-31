@@ -27,6 +27,7 @@ export default {
   // 路由前缀
   routes: {
     posts: '/posts',
+    books: '/books',
     archive: '/archive',
     about: '/about',
     search: '/search',

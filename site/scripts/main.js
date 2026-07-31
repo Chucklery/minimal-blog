@@ -213,7 +213,136 @@ function initPrefetch() {
 }
 
 // =============================================================================
-// 6. 返回顶部
+// 6. 书籍连续阅读：章节定位、进度与断点续读
+// =============================================================================
+
+function initBookReader() {
+  const reader = document.querySelector('[data-book-reader]');
+  if (!reader) return;
+
+  const chapters = [...reader.querySelectorAll('[data-book-chapter]')];
+  const tocLinks = [...reader.querySelectorAll('[data-book-chapter-link]')];
+  const status = reader.querySelector('[data-book-status]');
+  const resume = reader.querySelector('[data-book-resume]');
+  const resumeLabel = reader.querySelector('[data-book-resume-label]');
+  const resumeButton = reader.querySelector('[data-book-resume-button]');
+  const drawer = reader.querySelector('[data-book-toc-drawer]');
+  const storageKey = `book-progress:${reader.dataset.bookSlug}`;
+  let activeIndex = 0;
+  let allowUrlSync = Boolean(location.hash);
+  let ticking = false;
+  let lastSyncedChapter = location.hash.slice(1);
+
+  if (!chapters.length) return;
+
+  const readSavedProgress = () => {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || 'null');
+    } catch {
+      return null;
+    }
+  };
+
+  const saveProgress = (chapter, percent) => {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          chapterId: chapter.id,
+          chapterTitle: chapter.dataset.chapterTitle,
+          offset: Math.max(0, window.scrollY - chapter.offsetTop),
+          percent,
+          updatedAt: Date.now(),
+        })
+      );
+    } catch {
+      // 存储不可用时不影响阅读
+    }
+  };
+
+  const setActiveChapter = (index, percent, shouldSave = true) => {
+    activeIndex = index;
+    const chapter = chapters[index];
+
+    tocLinks.forEach((link) => {
+      const active = link.getAttribute('href') === `#${chapter.id}`;
+      link.classList.toggle('active', active);
+      if (active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+
+    if (status) {
+      status.textContent = `第 ${index + 1} / ${chapters.length} 章 · ${percent}%`;
+    }
+
+    if (allowUrlSync && lastSyncedChapter !== chapter.id) {
+      history.replaceState(null, '', `#${chapter.id}`);
+      lastSyncedChapter = chapter.id;
+    }
+
+    if (shouldSave) saveProgress(chapter, percent);
+  };
+
+  const update = (shouldSave = true) => {
+    const threshold = window.innerHeight * 0.32;
+    let index = 0;
+    chapters.forEach((chapter, chapterIndex) => {
+      if (chapter.getBoundingClientRect().top <= threshold) index = chapterIndex;
+    });
+
+    const start = chapters[0].offsetTop;
+    const end = chapters.at(-1).offsetTop + chapters.at(-1).offsetHeight - window.innerHeight;
+    const percent = Math.round(
+      Math.max(0, Math.min(1, (window.scrollY - start) / Math.max(1, end - start))) * 100
+    );
+
+    setActiveChapter(index, percent, shouldSave);
+    ticking = false;
+  };
+
+  const saved = readSavedProgress();
+  const savedChapter = saved && chapters.find((chapter) => chapter.id === saved.chapterId);
+  if (!location.hash && savedChapter && saved.percent > 0 && resume && resumeButton) {
+    resume.hidden = false;
+    if (resumeLabel) {
+      resumeLabel.textContent = `${saved.chapterTitle} · ${saved.percent}%`;
+    }
+    resumeButton.addEventListener('click', () => {
+      allowUrlSync = true;
+      resume.hidden = true;
+      window.scrollTo({
+        top: savedChapter.offsetTop + (saved.offset || 0),
+        behavior: 'smooth',
+      });
+    });
+  }
+
+  tocLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      allowUrlSync = true;
+      if (resume) resume.hidden = true;
+      if (drawer) drawer.removeAttribute('open');
+    });
+  });
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      allowUrlSync = true;
+      if (resume) resume.hidden = true;
+      if (!ticking) {
+        requestAnimationFrame(() => update(true));
+        ticking = true;
+      }
+    },
+    { passive: true }
+  );
+
+  update(false);
+}
+
+// =============================================================================
+// 7. 返回顶部
 // =============================================================================
 
 function initBackToTop() {
@@ -262,5 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTocHighlight();
   initInlineToc();
   initPrefetch();
+  initBookReader();
   initBackToTop();
 });

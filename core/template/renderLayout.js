@@ -37,7 +37,7 @@ export function renderLayout({
   tocHtml = '',
 }) {
   const fullTitle = page === 'home' ? site.title : `${title} — ${site.title}`;
-  const ogType = page === 'post' ? 'article' : 'website';
+  const ogType = page === 'post' ? 'article' : page === 'book' ? 'book' : 'website';
   const resolvedOgImage = ogImage || site.socialImage;
 
   const meta = renderMeta({
@@ -89,6 +89,7 @@ ${meta}
       <a href="${bp}/" class="site-name">${escapeHtml(site.title)}</a>
       <nav class="site-nav" aria-label="主导航">
         <a href="${bp}/">Posts</a>
+        ${site.hasBooks ? `<a href="${bp}/books/">Books</a>` : ''}
         <a href="${bp}/archive/">Archive</a>
         <a href="${bp}/search/">Search</a>
         <a href="${bp}/about/">About</a>
