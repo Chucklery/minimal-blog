@@ -136,13 +136,36 @@ async function check() {
     console.log(`  ✅ posts/: ${htmlFiles.length} html files`);
     passed++;
 
+    let bookEntries = [];
+    try {
+      bookEntries = await readdir(join(DIST_DIR, 'books'), { withFileTypes: true });
+    } catch {
+      // 没有已发布书籍时不要求 books/ 输出
+    }
+    const bookDirectories = bookEntries.filter((entry) => entry.isDirectory());
+    const bookCount = bookDirectories.length;
+    if (bookCount > 0) {
+      try {
+        await stat(join(DIST_DIR, 'books', 'index.html'));
+        for (const directory of bookDirectories) {
+          await stat(join(DIST_DIR, 'books', directory.name, 'index.html'));
+        }
+        console.log(`  ✅ books/: ${bookCount} continuous reader(s)`);
+        passed++;
+      } catch {
+        console.log(`  ❌ books/ — reader output incomplete`);
+        failed++;
+      }
+    }
+
     const socialFiles = await readdir(join(DIST_DIR, 'assets', 'og'));
     const socialImages = socialFiles.filter((file) => file.endsWith('.jpg'));
-    if (socialImages.length === htmlFiles.length) {
-      console.log(`  ✅ social images: ${socialImages.length} article cards`);
+    const expectedSocialImages = htmlFiles.length + bookCount;
+    if (socialImages.length === expectedSocialImages) {
+      console.log(`  ✅ social images: ${socialImages.length} content cards`);
       passed++;
     } else {
-      console.log(`  ❌ social images — expected ${htmlFiles.length}, found ${socialImages.length}`);
+      console.log(`  ❌ social images — expected ${expectedSocialImages}, found ${socialImages.length}`);
       failed++;
     }
   } catch {
@@ -160,6 +183,20 @@ async function check() {
     console.log(`  ❌ search index — full-text content missing`);
     failed++;
   }
+  const hasPublishedBooks = searchIndex.some((entry) => entry.type === 'book-chapter');
+  let hasBookOutput = true;
+  try {
+    await stat(join(DIST_DIR, 'books', 'index.html'));
+  } catch {
+    hasBookOutput = false;
+  }
+  if (hasBookOutput === hasPublishedBooks) {
+    console.log(`  ✅ book search index: ${hasPublishedBooks ? 'chapters included' : 'no orphan entries'}`);
+    passed++;
+  } else {
+    console.log(`  ❌ book search index — output and index disagree`);
+    failed++;
+  }
 
   const sitemap = await readFile(join(DIST_DIR, 'sitemap.xml'), 'utf-8');
   if (sitemap.includes('/tags/')) {
@@ -167,6 +204,13 @@ async function check() {
     passed++;
   } else {
     console.log(`  ❌ sitemap.xml — tag pages missing`);
+    failed++;
+  }
+  if (sitemap.includes('/books/') === hasPublishedBooks) {
+    console.log(`  ✅ sitemap.xml: ${hasPublishedBooks ? 'books included' : 'no draft books exposed'}`);
+    passed++;
+  } else {
+    console.log(`  ❌ sitemap.xml — book publication state incorrect`);
     failed++;
   }
 

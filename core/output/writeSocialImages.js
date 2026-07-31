@@ -8,7 +8,7 @@ import { DIST_ASSETS, DIST_DIR, PUBLIC_DIR } from '../utils/paths.js';
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-export async function writeSocialImages({ posts }) {
+export async function writeSocialImages({ posts, books = [] }) {
   const source = join(PUBLIC_DIR, 'og', 'default.jpg');
   const defaultDir = join(DIST_DIR, 'og');
   const articleDir = join(DIST_ASSETS, 'og');
@@ -24,17 +24,27 @@ export async function writeSocialImages({ posts }) {
   await sharp(background).toFile(join(defaultDir, 'default.jpg'));
 
   for (const post of posts) {
-    const titleOverlay = createTitleOverlay(post.title);
+    const titleOverlay = createTitleOverlay(post.title, 'ARTICLE');
     await sharp(background)
       .composite([{ input: Buffer.from(titleOverlay) }])
       .jpeg({ quality: 84, mozjpeg: true })
       .toFile(join(articleDir, `${post.slug}.jpg`));
   }
 
-  console.log(`  Social images: ${posts.length + 1} files → dist/og, dist/assets/og`);
+  for (const book of books) {
+    const titleOverlay = createTitleOverlay(book.title, 'BOOK');
+    await sharp(background)
+      .composite([{ input: Buffer.from(titleOverlay) }])
+      .jpeg({ quality: 84, mozjpeg: true })
+      .toFile(join(articleDir, `book-${book.slug}.jpg`));
+  }
+
+  console.log(
+    `  Social images: ${posts.length + books.length + 1} files → dist/og, dist/assets/og`
+  );
 }
 
-function createTitleOverlay(title) {
+function createTitleOverlay(title, typeLabel) {
   const fontSize = title.length > 32 ? 50 : 58;
   const lines = wrapTitle(title, title.length > 32 ? 19 : 17).slice(0, 3);
   const tspans = lines
@@ -55,7 +65,7 @@ function createTitleOverlay(title) {
       fill="#6f6f6f"
       font-family="'Noto Sans CJK SC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif"
       font-size="22"
-      font-weight="500">ARTICLE</text>
+      font-weight="500">${escapeXml(typeLabel)}</text>
   </svg>`;
 }
 

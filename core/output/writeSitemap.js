@@ -10,10 +10,11 @@ import { join } from 'node:path';
  * 生成并写入 sitemap
  * @param {Object} opts
  * @param {import('../content/loadPosts.js').Post[]} opts.posts
+ * @param {import('../content/loadBooks.js').Book[]} [opts.books]
  * @param {Object} opts.site
  * @returns {Promise<void>}
  */
-export async function writeSitemap({ posts, site }) {
+export async function writeSitemap({ posts, books = [], site }) {
   const tagKeys = new Set(
     posts.flatMap((post) => (post.tags || []).map((tag) => tag.toLowerCase()))
   );
@@ -21,6 +22,7 @@ export async function writeSitemap({ posts, site }) {
     { loc: site.baseUrl, priority: '1.0', changefreq: 'daily' },
     { loc: `${site.baseUrl}/archive/`, priority: '0.7' },
     { loc: `${site.baseUrl}/about/`, priority: '0.6' },
+    ...(books.length > 0 ? [{ loc: `${site.baseUrl}/books/`, priority: '0.7' }] : []),
     ...posts.map((p) => ({
       loc: `${site.baseUrl}/posts/${p.slug}.html`,
       priority: '0.8',
@@ -29,6 +31,11 @@ export async function writeSitemap({ posts, site }) {
     ...[...tagKeys].map((tag) => ({
       loc: `${site.baseUrl}/tags/${encodeURIComponent(tag)}/`,
       priority: '0.5',
+    })),
+    ...books.map((book) => ({
+      loc: `${site.baseUrl}/books/${book.slug}/`,
+      priority: '0.9',
+      ...(book.date ? { lastmod: formatDate(book.date, 'iso') } : {}),
     })),
   ];
 

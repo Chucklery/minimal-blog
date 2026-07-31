@@ -87,16 +87,20 @@
 
   function renderPost(post, tokens, index) {
     const snippet = getSnippet(post, tokens);
+    const meta = [
+      post.bookTitle ? `《${post.bookTitle}》` : '',
+      post.date,
+      ...(post.tags || []),
+    ].filter(Boolean);
     return `
       <article class="search-result" role="option" aria-selected="false">
         <h2 class="search-result-title">
-          <a id="search-result-${index}" href="${basePath}/posts/${escape(post.slug)}.html">
+          <a id="search-result-${index}" href="${basePath}${escape(post.url || `/posts/${post.slug}.html`)}">
             ${highlight(post.title, tokens)}
           </a>
         </h2>
         <div class="search-result-meta">
-          ${escape(post.date)}
-          ${post.tags.length ? ` · ${post.tags.map((tag) => highlight(tag, tokens)).join(', ')}` : ''}
+          ${meta.map((item) => highlight(item, tokens)).join(' · ')}
         </div>
         <p class="search-result-desc">${highlight(snippet, tokens)}</p>
       </article>`;

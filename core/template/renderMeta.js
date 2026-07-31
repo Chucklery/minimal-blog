@@ -10,7 +10,7 @@ import { escapeAttr } from '../utils/escapeHtml.js';
  * @param {string} opts.description
  * @param {string} [opts.canonicalUrl]
  * @param {string} [opts.ogImage]
- * @param {'article'|'website'} [opts.ogType]
+ * @param {'article'|'book'|'website'} [opts.ogType]
  * @param {string} [opts.publishedDate] - ISO date
  * @param {string} [opts.siteName]
  * @param {string} [opts.authorName]
@@ -87,6 +87,19 @@ export function renderMeta({
       mainEntityOfPage: canonicalUrl,
       ...(authorName ? { author: { '@type': 'Person', name: authorName } } : {}),
       ...(siteName ? { publisher: { '@type': 'Organization', name: siteName } } : {}),
+      ...(ogImage ? { image: ogImage } : {}),
+    };
+    lines.push(`  <script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>`);
+  }
+
+  if (ogType === 'book') {
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Book',
+      name: contentTitle,
+      description,
+      url: canonicalUrl,
+      ...(authorName ? { author: { '@type': 'Person', name: authorName } } : {}),
       ...(ogImage ? { image: ogImage } : {}),
     };
     lines.push(`  <script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>`);
