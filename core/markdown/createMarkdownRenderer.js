@@ -51,6 +51,11 @@ export async function createMarkdownRenderer() {
   md.renderer.rules.fence = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
     const lang = token.info ? token.info.trim().split(/\s+/)[0] : 'text';
+    if (lang.toLowerCase() === 'mermaid') {
+      return `<figure class="mermaid-diagram" data-mermaid-diagram>
+  <pre class="mermaid">${md.utils.escapeHtml(token.content.trim())}</pre>
+</figure>`;
+    }
     const languageLabel = getLanguageLabel(lang);
     const languageAttrs = ` data-language="${md.utils.escapeHtml(languageLabel)}" aria-label="${md.utils.escapeHtml(languageLabel)} code block"`;
 

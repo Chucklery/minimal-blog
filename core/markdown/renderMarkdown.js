@@ -42,7 +42,7 @@ export async function renderMarkdown(content, { headingIdPrefix = '' } = {}) {
     token.attrSet('id', id);
   }
 
-  return md.renderer.render(tokens, md.options, env);
+  return renderCallouts(md.renderer.render(tokens, md.options, env));
 }
 
 function slugifyHeading(text) {
@@ -54,4 +54,20 @@ function slugifyHeading(text) {
     .replace(/[^\p{Letter}\p{Number}_-]/gu, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+function renderCallouts(html) {
+  const labels = {
+    NOTE: '说明',
+    TIP: '建议',
+    WARNING: '注意',
+  };
+
+  return html.replace(
+    /<blockquote>\s*<p>\[!(NOTE|TIP|WARNING)\]<br>\s*([\s\S]*?)<\/p>\s*<\/blockquote>/g,
+    (_, type, content) => (
+      `<aside class="callout callout-${type.toLowerCase()}" role="note">`
+      + `<p class="callout-label">${labels[type]}</p><p>${content}</p></aside>`
+    )
+  );
 }

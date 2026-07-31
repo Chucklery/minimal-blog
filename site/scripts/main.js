@@ -342,7 +342,33 @@ function initBookReader() {
 }
 
 // =============================================================================
-// 7. 返回顶部
+// 7. Mermaid 图表（仅在需要时加载）
+// =============================================================================
+
+async function initMermaid() {
+  const diagrams = [...document.querySelectorAll('[data-mermaid-diagram] .mermaid')];
+  if (!diagrams.length) return;
+
+  try {
+    const { default: mermaid } = await import(
+      'https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs'
+    );
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'neutral',
+      fontFamily: 'system-ui, sans-serif',
+    });
+    await mermaid.run({ nodes: diagrams });
+  } catch {
+    document.querySelectorAll('[data-mermaid-diagram]').forEach((diagram) => {
+      diagram.classList.add('mermaid-fallback');
+    });
+  }
+}
+
+// =============================================================================
+// 8. 返回顶部
 // =============================================================================
 
 function initBackToTop() {
@@ -392,5 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initInlineToc();
   initPrefetch();
   initBookReader();
+  initMermaid();
   initBackToTop();
 });
