@@ -25,6 +25,12 @@
     
   </url>
   <url>
+    <loc>https://chucklery.github.io/minimal-blog/posts/alphagpt-research.html</loc>
+    <priority>0.8</priority>
+    <lastmod>2026-08-06</lastmod>
+    
+  </url>
+  <url>
     <loc>https://chucklery.github.io/minimal-blog/posts/cs-network.html</loc>
     <priority>0.8</priority>
     <lastmod>2026-07-23</lastmod>
@@ -49,15 +55,15 @@
     
   </url>
   <url>
-    <loc>https://chucklery.github.io/minimal-blog/posts/02-MinimalBlog-exact.html</loc>
-    <priority>0.8</priority>
-    <lastmod>2026-06-01</lastmod>
+    <loc>https://chucklery.github.io/minimal-blog/tags/quant/</loc>
+    <priority>0.5</priority>
+    
     
   </url>
   <url>
-    <loc>https://chucklery.github.io/minimal-blog/posts/platform-sutra-interpretation-1.html</loc>
-    <priority>0.8</priority>
-    <lastmod>2026-06-01</lastmod>
+    <loc>https://chucklery.github.io/minimal-blog/tags/alpha_mining/</loc>
+    <priority>0.5</priority>
+    
     
   </url>
   <url>
@@ -74,12 +80,6 @@
   </url>
   <url>
     <loc>https://chucklery.github.io/minimal-blog/tags/product/</loc>
-    <priority>0.5</priority>
-    
-    
-  </url>
-  <url>
-    <loc>https://chucklery.github.io/minimal-blog/tags/opportunity/</loc>
     <priority>0.5</priority>
     
     
@@ -103,12 +103,6 @@
     
   </url>
   <url>
-    <loc>https://chucklery.github.io/minimal-blog/tags/classics/</loc>
-    <priority>0.5</priority>
-    
-    
-  </url>
-  <url>
     <loc>https://chucklery.github.io/minimal-blog/tags/chan/</loc>
     <priority>0.5</priority>
     
@@ -116,30 +110,6 @@
   </url>
   <url>
     <loc>https://chucklery.github.io/minimal-blog/tags/wangdefeng/</loc>
-    <priority>0.5</priority>
-    
-    
-  </url>
-  <url>
-    <loc>https://chucklery.github.io/minimal-blog/tags/plans/</loc>
-    <priority>0.5</priority>
-    
-    
-  </url>
-  <url>
-    <loc>https://chucklery.github.io/minimal-blog/tags/phase/</loc>
-    <priority>0.5</priority>
-    
-    
-  </url>
-  <url>
-    <loc>https://chucklery.github.io/minimal-blog/tags/detail-plan/</loc>
-    <priority>0.5</priority>
-    
-    
-  </url>
-  <url>
-    <loc>https://chucklery.github.io/minimal-blog/tags/minimal/</loc>
     <priority>0.5</priority>
     
     
