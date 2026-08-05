@@ -3,7 +3,7 @@ title: "王德峰《六祖坛经》讲读全记录"
 slug: "altar-sutra-wdf"
 date: "2026-06-06"
 description: "复旦大学王德峰教授《坛经》十品完整讲读笔录——从行由品到付嘱品，逐品讲解惠能禅宗思想，涵盖般若、决疑、定慧、坐禅、忏悔、机缘、顿渐、宣诏、付嘱全十品。"
-tags: [zen, buddhism, philosophy, classics, chan, wangdefeng]
+tags: [zen, buddhism, philosophy, chan, wangdefeng]
 draft: false
 featured: true
 ---

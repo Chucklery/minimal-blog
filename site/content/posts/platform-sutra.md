@@ -3,7 +3,7 @@ title: "六祖坛经解译：直指人心的智慧"
 slug: "platform-sutra-interpretation"
 date: "2026-06-01"
 description: "《六祖坛经》全本十品逐品解读——中国佛教唯一被称为经的本土著作，从行由品到付嘱品，从菩提偈到三科三十六对，全面解析惠能顿悟法门。"
-tags: [zen, buddhism, philosophy, classics, chan]
+tags: [zen, buddhism, philosophy, chan]
 draft: false
 featured: true
 ---

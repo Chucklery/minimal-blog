@@ -3,7 +3,7 @@ title: "面向量化投资的人机交互式Alpha挖掘"
 slug: "alphagpt-research"
 date: "2026-08-06"
 description: ""
-tags: [quant, alpha_factors, factor_mining]
+tags: [quant, alpha_mining]
 draft: false
 featured: true
 ---
