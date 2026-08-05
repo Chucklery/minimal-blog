@@ -1,8 +1,8 @@
 ---
-title: "面向量化投资的人机交互式Alpha挖掘"
+title: "Alpha Mining"
 slug: "alphagpt-research"
 date: "2026-08-06"
-description: ""
+description: "AlphaGPT论文翻译"
 tags: [quant, alpha_mining]
 draft: false
 featured: true
@@ -16,7 +16,7 @@ featured: true
 
 ¹ 香港科技大学，² IDEA研究院，³ 哥伦比亚大学，⁴ 香港科技大学（广州）
 
-{swangeh, hyuanak}@connect.ust.hk, leon.zhou@columbia.edu, ni@ust.hk, {hshum,guojian}@idea.edu.cn
+{swangeh, hyuanak}@connect.ust.hk, leon.zhou@columbia.edu, ni@ust.hk, {hshum,guojian} @idea.edu.cn
 
 *共同第一作者
 
