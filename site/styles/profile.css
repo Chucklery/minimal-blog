@@ -55,7 +55,7 @@
 .profile-portrait {
   object-fit: cover;
   object-position: 72% 42%;
-  opacity: 0.34;
+  opacity: 0;
   filter: saturate(0.72) contrast(1.12);
   transition: opacity 900ms ease;
 }
@@ -65,8 +65,12 @@
   touch-action: pan-y;
 }
 
-.profile-hero.is-particle-ready .profile-portrait {
-  opacity: 0.08;
+.profile-hero.is-particle-fallback .profile-portrait {
+  opacity: 0.4;
+}
+
+.profile-hero.is-particle-fallback .profile-particles {
+  display: none;
 }
 
 .profile-nav {
@@ -233,6 +237,10 @@
   color: var(--profile-muted);
 }
 
+.page-profile .site-footer a:hover {
+  color: var(--profile-text);
+}
+
 @media (max-width: 760px) {
   .profile-hero {
     min-height: 100svh;
@@ -273,9 +281,6 @@
     position: static;
   }
 
-  .page-profile .footer-inner {
-    align-items: flex-start;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -283,8 +288,7 @@
     display: none;
   }
 
-  .profile-portrait,
-  .profile-hero.is-particle-ready .profile-portrait {
+  .profile-portrait {
     opacity: 0.4;
   }
 

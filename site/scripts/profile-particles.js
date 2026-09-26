@@ -5,12 +5,21 @@
   if (!canvas || !hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) {
+    hero.classList.add('is-particle-fallback');
+    return;
+  }
   const source = new Image();
   source.decoding = 'async';
   source.src = canvas.dataset.source;
 
   const TAU = Math.PI * 2;
-  const tones = ['#10212c', '#2d2423', '#603827', '#a95631', '#e57c47', '#ffb080', '#ffd3b8'];
+  // Keep shadow particles cool and distinct from the near-black backdrop;
+  // compress the photo's dark range so hair and face contours remain visible.
+  const tones = [
+    '#344955', '#526875', '#74818a', '#936047', '#b55732',
+    '#d86839', '#f0804b', '#ffaf7e', '#ffe0c8',
+  ];
   const pointer = { x: -10000, y: -10000, active: false };
   let width = 0;
   let height = 0;
@@ -66,8 +75,10 @@
     offctx.drawImage(source, 0, 0, sampleWidth, sampleHeight);
     const pixels = offctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
 
-    count = compact ? Math.min(3800, Math.round(width * height / 120)) : Math.min(11000, Math.round(width * height / 120));
-    count = Math.max(2200, count);
+    count = compact
+      ? Math.min(6500, Math.round(width * height / 85))
+      : Math.min(18000, Math.round(width * height / 78));
+    count = Math.max(compact ? 3200 : 7000, count);
     seed = (Math.imul(width | 0, 73856093) ^ Math.imul(height | 0, 19349663)) >>> 0;
 
     tx = new Float32Array(count);
@@ -97,6 +108,8 @@
       let red = 0;
       let green = 0;
       let blue = 0;
+      let edge = 0;
+      let warmth = 0;
 
       for (let attempt = 0; attempt < 160; attempt++) {
         localX = Math.floor(random() * sampleWidth);
@@ -107,11 +120,26 @@
         blue = pixels[pixel + 2];
         luminance = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
 
+        const left = Math.max(0, localX - 1);
+        const right = Math.min(sampleWidth - 1, localX + 1);
+        const top = Math.max(0, localY - 1);
+        const bottom = Math.min(sampleHeight - 1, localY + 1);
+        const lumaAt = (x, y) => {
+          const neighbor = (y * sampleWidth + x) * 4;
+          return pixels[neighbor] * 0.2126 + pixels[neighbor + 1] * 0.7152 + pixels[neighbor + 2] * 0.0722;
+        };
+        edge = clamp((Math.abs(lumaAt(right, localY) - lumaAt(left, localY)) + Math.abs(lumaAt(localX, bottom) - lumaAt(localX, top))) / 255 * 2.2, 0, 1);
+        warmth = clamp((red - blue - 4) / 75, 0, 1);
+
         const nx = (localX / sampleWidth - 0.5) * 2;
         const ny = (localY / sampleHeight - 0.5) * 2;
-        const vignette = clamp(1 - Math.pow(Math.hypot(nx * 0.88, ny), 2.5), 0, 1);
-        const warmth = clamp((red - blue + 70) / 180, 0, 1);
-        const density = vignette * (0.08 + luminance * 0.74 + warmth * 0.2);
+        const vignette = clamp(1 - Math.pow(Math.hypot(nx * 0.84, ny * 0.96), 3), 0, 1);
+        // Favor warm hair/skin and local strands while suppressing the cool,
+        // low-contrast background. This tightens the portrait silhouette.
+        const coolShadowPenalty = blue > red * 1.18 && luminance < 0.48 ? 0.38 : 1;
+        const density = vignette
+          * (0.035 + luminance * 0.58 + warmth * 0.8 + edge * 0.25)
+          * coolShadowPenalty;
         if (random() < density) break;
       }
 
@@ -124,12 +152,17 @@
       sy[index] = centerY + Math.sin(angle) * radius;
       px[index] = sx[index];
       py[index] = sy[index];
-      sizes[index] = 0.75 + random() * 1.55;
+      sizes[index] = 1.05 + random() * 1.75;
       phases[index] = random() * TAU;
       lanes[index] = (random() * 12) | 0;
 
-      const warmBoost = red > blue * 1.35 ? 1 : 0;
-      const selectedTone = clamp(Math.floor(luminance * 6 + warmBoost), 0, tones.length - 1);
+      const warmBoost = clamp((red - blue - 4) / 75, 0, 1) * 0.34;
+      const contrastLuminance = clamp((luminance - 0.02) * 1.52 + warmBoost + edge * 0.14, 0, 1);
+      const selectedTone = clamp(
+        Math.round(contrastLuminance * (tones.length - 1)),
+        0,
+        tones.length - 1
+      );
       toneIndex[index] = selectedTone;
       toneBuckets[selectedTone].push(index);
     }
@@ -250,4 +283,5 @@
 
   if (source.complete && source.naturalWidth) start();
   else source.addEventListener('load', start, { once: true });
+  source.addEventListener('error', () => hero.classList.add('is-particle-fallback'), { once: true });
 })();

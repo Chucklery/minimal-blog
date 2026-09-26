@@ -110,7 +110,7 @@ ${meta}
     <div class="footer-inner">
       <div class="footer-links">
         <a href="${bp}/rss.xml">RSS Feed</a>
-        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/chucklery" target="_blank" rel="noopener noreferrer">GitHub</a>
         ${site.author?.url ? `<a href="${escapeAttr(site.author.url)}">About</a>` : ''}
       </div>
       <div class="footer-meta">
