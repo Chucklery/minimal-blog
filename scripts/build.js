@@ -17,6 +17,7 @@ import { renderHome } from '../core/template/renderHome.js';
 import { renderPost } from '../core/template/renderPost.js';
 import { renderArchive } from '../core/template/renderArchive.js';
 import { renderAbout } from '../core/template/renderAbout.js';
+import { renderProfile } from '../core/template/renderProfile.js';
 import { renderSearch } from '../core/template/renderSearch.js';
 import { renderTagPage } from '../core/template/renderTagPage.js';
 import { renderNotFound } from '../core/template/renderNotFound.js';
@@ -244,6 +245,38 @@ async function build() {
       });
     }
     await writePage('about/index.html', aboutHtml);
+  }
+
+  // 7.1 沉浸式个人简介页
+  const profilePage = pages.find((p) => p.slug === 'profile');
+  if (profilePage) {
+    const profileHtmlBody = await renderMarkdown(profilePage.rawContent);
+    const profileContent = renderProfile({
+      htmlBody: profileHtmlBody,
+      page: profilePage,
+      site,
+    });
+    let profileHtml = renderLayout({
+      site,
+      page: 'profile',
+      title: profilePage.title,
+      description: profilePage.description,
+      bodyContent: profileContent,
+      canonicalUrl: `${site.baseUrl}/about/profile/`,
+      ogImage: `${site.baseUrl}/images/about-portrait-og.jpg`,
+      hideHeader: true,
+      extraStyles: ['/assets/profile.css'],
+      extraScripts: ['/assets/profile-particles.js'],
+    });
+
+    if (site.build?.minifyHtml) {
+      profileHtml = await minify(profileHtml, {
+        collapseWhitespace: true,
+        removeComments: true,
+        minifyCSS: true,
+      });
+    }
+    await writePage('about/profile/index.html', profileHtml);
   }
 
   // 8. 搜索页

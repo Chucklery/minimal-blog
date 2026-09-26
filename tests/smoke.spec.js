@@ -117,5 +117,25 @@ test.describe('About page', () => {
   test('renders about page', async ({ page }) => {
     await page.goto(`${BASE_URL}/about/`);
     await expect(page.locator('.about')).toBeVisible();
+    await expect(page.locator('a[href="/about/profile/"]')).toBeVisible();
+  });
+
+  test('renders immersive profile page with portrait metadata', async ({ page }) => {
+    const errors = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text());
+    });
+    page.on('pageerror', (error) => errors.push(error.message));
+
+    await page.goto(`${BASE_URL}/about/profile/`);
+    await expect(page.locator('.profile-page')).toBeVisible();
+    await expect(page.locator('[data-profile-particles]')).toBeVisible();
+    await expect(page.locator('[data-profile-hero]')).toHaveClass(/is-particle-ready/);
+    await expect(page.locator('.profile-prose')).toContainText('Chuckle');
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      /images\/about-portrait-og\.jpg$/
+    );
+    expect(errors).toEqual([]);
   });
 });

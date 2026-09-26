@@ -20,6 +20,8 @@ import { renderThemeToggle } from './renderThemeToggle.js';
  * @param {boolean} [opts.noindex]
  * @param {boolean} [opts.showProgress] - 是否显示阅读进度条
  * @param {string} [opts.tocHtml] - 文章页 TOC
+ * @param {string[]} [opts.extraStyles] - 当前页面额外加载的样式
+ * @param {string[]} [opts.extraScripts] - 当前页面额外加载的脚本
  * @returns {string}
  */
 export function renderLayout({
@@ -35,6 +37,8 @@ export function renderLayout({
   showProgress = false,
   hideHeader = false,
   tocHtml = '',
+  extraStyles = [],
+  extraScripts = [],
 }) {
   const fullTitle = page === 'home' ? site.title : `${title} — ${site.title}`;
   const ogType = page === 'post' ? 'article' : page === 'book' ? 'book' : 'website';
@@ -70,6 +74,7 @@ ${meta}
   <link rel="stylesheet" href="${bp}/assets/layout.css">
   <link rel="stylesheet" href="${bp}/assets/prose.css">
   <link rel="stylesheet" href="${bp}/assets/components.css">
+  ${extraStyles.map((href) => `<link rel="stylesheet" href="${bp}${href}">`).join('\n  ')}
   <link rel="icon" href="${bp}/favicon.svg" type="image/svg+xml">
   <link rel="alternate" type="application/rss+xml" title="${escapeAttr(site.title)} RSS" href="${bp}/rss.xml">
   <script>
@@ -115,6 +120,7 @@ ${meta}
   </footer>
 
   <script src="${bp}/assets/main.js" type="module" defer></script>
+  ${extraScripts.map((src) => `<script src="${bp}${src}" type="module" defer></script>`).join('\n  ')}
 </body>
 </html>`;
 }

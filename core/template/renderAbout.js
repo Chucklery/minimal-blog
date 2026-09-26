@@ -11,6 +11,8 @@ import { escapeHtml } from '../utils/escapeHtml.js';
  * @returns {string}
  */
 export function renderAbout({ htmlBody, site }) {
+  const bp = site.basePath || '';
+
   return `
 <main class="about" id="main-content">
   <article class="about-article">
@@ -20,6 +22,15 @@ export function renderAbout({ htmlBody, site }) {
     <div class="prose">
       ${htmlBody}
     </div>
+    <a class="about-profile-link" href="${bp}/about/profile/" data-prefetch>
+      <img src="${bp}/images/about-portrait.jpg" width="1179" height="1187" alt="Chuckle 的个人肖像" loading="lazy">
+      <span class="about-profile-copy">
+        <span class="about-profile-label">More about me</span>
+        <strong>认识屏幕背后的我</strong>
+        <span>从技术、产品到持续写作，进入一页更完整的自我介绍。</span>
+      </span>
+      <span class="about-profile-arrow" aria-hidden="true">↗</span>
+    </a>
   </article>
 </main>`;
 }

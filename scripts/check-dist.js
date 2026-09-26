@@ -43,6 +43,7 @@ async function check() {
     'sitemap.xml',
     'archive/index.html',
     'about/index.html',
+    'about/profile/index.html',
     'assets/reset.css',
     'assets/tokens.css',
     'assets/base.css',
@@ -51,9 +52,13 @@ async function check() {
     'assets/components.css',
     'assets/main.js',
     'assets/search-page.js',
+    'assets/profile-particles.js',
+    'assets/profile.css',
     'search/index.html',
     'assets/search-index.json',
     'og/default.jpg',
+    'images/about-portrait.jpg',
+    'images/about-portrait-og.jpg',
   ];
 
   for (const file of required) {

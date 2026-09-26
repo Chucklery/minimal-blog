@@ -11,6 +11,7 @@ import { slugify } from '../utils/slug.js';
  * @typedef {Object} Page
  * @property {string} slug
  * @property {string} title
+ * @property {string} description
  * @property {string} rawContent - 原始 Markdown
  */
 
@@ -41,6 +42,7 @@ export async function loadPages() {
     pages.push({
       slug,
       title: frontmatter.title || basename(filename, '.md'),
+      description: frontmatter.description || '',
       rawContent: content.trim(),
       filename,
     });

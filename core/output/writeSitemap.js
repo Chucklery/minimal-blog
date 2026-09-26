@@ -22,6 +22,7 @@ export async function writeSitemap({ posts, books = [], site }) {
     { loc: site.baseUrl, priority: '1.0', changefreq: 'daily' },
     { loc: `${site.baseUrl}/archive/`, priority: '0.7' },
     { loc: `${site.baseUrl}/about/`, priority: '0.6' },
+    { loc: `${site.baseUrl}/about/profile/`, priority: '0.6' },
     ...(books.length > 0 ? [{ loc: `${site.baseUrl}/books/`, priority: '0.7' }] : []),
     ...posts.map((p) => ({
       loc: `${site.baseUrl}/posts/${p.slug}.html`,
