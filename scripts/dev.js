@@ -2,7 +2,7 @@
 // 开发模式：chokidar 监听文件变化 → 自动重新构建
 
 import { watch } from 'chokidar';
-import { exec } from 'node:child_process';
+import { exec, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { ROOT } from '../core/utils/paths.js';
 import { join } from 'node:path';
@@ -11,6 +11,7 @@ const execAsync = promisify(exec);
 
 let building = false;
 let pending = false;
+let previewServer;
 
 async function rebuild() {
   if (building) {
@@ -33,8 +34,28 @@ async function rebuild() {
 
   if (pending) {
     pending = false;
-    rebuild();
+    await rebuild();
   }
+}
+
+function startPreview() {
+  const command = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+  previewServer = spawn(command, ['preview'], {
+    cwd: ROOT,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+  previewServer.on('error', (err) => console.error('Preview server failed to start:', err.message));
+  previewServer.on('exit', (code) => {
+    if (code && code !== 0) console.error(`Preview server exited with code ${code}`);
+    previewServer = undefined;
+  });
+  console.log('🌐 Preview: http://localhost:8088');
+}
+
+function stopPreview() {
+  previewServer?.kill();
+  watcher.close();
 }
 
 // 监听 content, styles, scripts, templates
@@ -60,9 +81,10 @@ watcher.on('all', (event, filepath) => {
 });
 
 console.log('👀 Watching for changes...');
-console.log('   pnpm dev only watches files and rebuilds dist; it does not start a web server.');
-console.log('   To preview, run `pnpm preview` in another terminal: http://localhost:8088');
 console.log('   Press Ctrl+C to stop\n');
 
+process.on('SIGINT', stopPreview);
+process.on('SIGTERM', stopPreview);
+
 // 首次构建
-rebuild();
+rebuild().then(startPreview);

@@ -81,9 +81,9 @@
     const pixels = offctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
 
     count = compact
-      ? Math.min(6500, Math.round(width * height / 85))
-      : Math.min(18000, Math.round(width * height / 78));
-    count = Math.max(compact ? 3200 : 7000, count);
+      ? Math.min(4200, Math.round(width * height / 130))
+      : Math.min(12000, Math.round(width * height / 110));
+    count = Math.max(compact ? 2200 : 6000, count);
     seed = (Math.imul(width | 0, 73856093) ^ Math.imul(height | 0, 19349663)) >>> 0;
 
     tx = new Float32Array(count);
@@ -311,6 +311,10 @@
   }, { passive: true });
 
   addEventListener('resize', () => {
+    // Mobile browsers often fire resize while the address bar expands or
+    // collapses during scrolling. The hero's width stays fixed, so rebuilding
+    // every particle on those height-only changes causes a visible restart.
+    if (width < 760 && canvas.clientWidth === width) return;
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(start);
   }, { passive: true });

@@ -11,7 +11,7 @@
 
 ```bash
 pnpm install       # 安装依赖
-pnpm dev           # 开发模式（自动 watch + rebuild）
+pnpm dev           # 构建、启动本地预览，并在文件变化时自动重建
 pnpm build         # 生产构建
 pnpm preview       # 本地预览 http://localhost:8088
 pnpm check         # 构建产物校验
@@ -44,8 +44,7 @@ pnpm build   # 重新构建
 ## 调试
 
 ```bash
-# 用 Chrome DevTools
-pnpm preview
+# 用 Chrome DevTools（pnpm dev 已启动预览）
 # 打开 http://localhost:8088 → F12
 
 # 用 Playwright

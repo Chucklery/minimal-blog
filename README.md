@@ -17,13 +17,13 @@
 # 安装依赖
 pnpm install
 
-# 开发（watch + rebuild）
+# 开发（构建 + 预览 + 自动重建）
 pnpm dev
 
 # 构建
 pnpm build
 
-# 预览
+# 单独预览已有构建产物
 pnpm preview
 # → http://localhost:8088
 ```
