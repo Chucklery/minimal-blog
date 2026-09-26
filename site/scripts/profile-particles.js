@@ -20,6 +20,7 @@
     '#344955', '#526875', '#74818a', '#936047', '#b55732',
     '#d86839', '#f0804b', '#ffaf7e', '#ffe0c8',
   ];
+  const ALPHA_LEVELS = 8;
   const pointer = { x: -10000, y: -10000, active: false };
   let width = 0;
   let height = 0;
@@ -40,9 +41,13 @@
   let oy;
   let sizes;
   let phases;
+  let pulseSpeeds;
   let lanes;
   let toneIndex;
-  let toneBuckets;
+  let alphaIndex;
+  let drawOrder;
+  let drawCounts;
+  let drawStarts;
 
   const random = () => {
     seed += 0x6d2b79f5;
@@ -91,9 +96,13 @@
     oy = new Float32Array(count);
     sizes = new Float32Array(count);
     phases = new Float32Array(count);
+    pulseSpeeds = new Float32Array(count);
     lanes = new Uint8Array(count);
     toneIndex = new Uint8Array(count);
-    toneBuckets = Array.from({ length: tones.length }, () => []);
+    alphaIndex = new Uint8Array(count);
+    drawOrder = new Int32Array(count);
+    drawCounts = new Int32Array(tones.length * ALPHA_LEVELS);
+    drawStarts = new Int32Array(tones.length * ALPHA_LEVELS);
 
     const originX = compact ? (width - sampleWidth) / 2 : width * 0.46;
     const originY = compact ? Math.max(40, height * 0.05) : (height - sampleHeight) * 0.38;
@@ -154,6 +163,7 @@
       py[index] = sy[index];
       sizes[index] = 1.05 + random() * 1.75;
       phases[index] = random() * TAU;
+      pulseSpeeds[index] = 1.35 + random() * 1.9;
       lanes[index] = (random() * 12) | 0;
 
       const warmBoost = clamp((red - blue - 4) / 75, 0, 1) * 0.34;
@@ -164,7 +174,6 @@
         tones.length - 1
       );
       toneIndex[index] = selectedTone;
-      toneBuckets[selectedTone].push(index);
     }
 
     startedAt = performance.now();
@@ -217,17 +226,51 @@
     ctx.fillStyle = '#05090d';
     ctx.fillRect(0, 0, width, height);
     const entrance = clamp((now - startedAt) / 2600, 0, 1);
+    const settled = smootherstep(clamp((now - startedAt) / 4100, 0, 1));
+    drawCounts.fill(0);
 
-    for (let tone = 0; tone < toneBuckets.length; tone++) {
+    // Each dot pulses on its own phase. Quantized alpha buckets keep the
+    // Canvas state changes bounded while letting settled parts of the face
+    // fade in and out independently.
+    for (let index = 0; index < count; index++) {
+      const wave = (Math.sin(now * 0.001 * pulseSpeeds[index] + phases[index]) + 1) * 0.5;
+      const pulse = wave < 0.4
+        ? 0.12 + wave * 0.65
+        : 0.38 + ((wave - 0.4) / 0.6) * 0.62;
+      const opacity = 1 - settled + pulse * settled;
+      const level = Math.round(opacity * (ALPHA_LEVELS - 1));
+      alphaIndex[index] = level;
+      drawCounts[toneIndex[index] * ALPHA_LEVELS + level]++;
+    }
+
+    let offset = 0;
+    for (let bucket = 0; bucket < drawCounts.length; bucket++) {
+      drawStarts[bucket] = offset;
+      offset += drawCounts[bucket];
+    }
+    for (let index = 0; index < count; index++) {
+      const bucket = toneIndex[index] * ALPHA_LEVELS + alphaIndex[index];
+      drawOrder[drawStarts[bucket]++] = index;
+    }
+
+    let from = 0;
+    for (let bucket = 0; bucket < drawCounts.length; bucket++) {
+      const to = drawStarts[bucket];
+      if (to === from) continue;
+      const tone = (bucket / ALPHA_LEVELS) | 0;
+      const alpha = (bucket % ALPHA_LEVELS) / (ALPHA_LEVELS - 1);
       ctx.fillStyle = tones[tone];
-      const bucket = toneBuckets[tone];
-      for (let item = 0; item < bucket.length; item++) {
-        const index = bucket[item];
-        const shimmer = 0.82 + (Math.sin(now * 0.0014 + phases[index]) + 1) * 0.13;
+      ctx.globalAlpha = alpha;
+
+      for (let cursor = from; cursor < to; cursor++) {
+        const index = drawOrder[cursor];
+        const shimmer = 0.78 + alphaIndex[index] / (ALPHA_LEVELS - 1) * 0.3;
         const size = sizes[index] * shimmer * (0.58 + entrance * 0.42);
         ctx.fillRect(px[index], py[index], size, size);
       }
+      from = to;
     }
+    ctx.globalAlpha = 1;
   }
 
   function loop(now) {

@@ -1,13 +1,13 @@
 // core/template/renderProfile.js
 // 沉浸式个人简介页模板
 
-import { escapeAttr } from '../utils/escapeHtml.js';
+import { escapeAttr } from "../utils/escapeHtml.js";
 
 export function renderProfile({ htmlBody, page, site }) {
-  const bp = site.basePath || '';
-  const title = escapeAttr(page.title || '关于我');
+  const bp = site.basePath || "";
+  const title = escapeAttr(page.title || "关于我");
   const description = escapeAttr(
-    page.description || '关于 Chuckle：技术、产品、设计与持续写作。'
+    page.description || "关于 Chuckle：技术、产品、设计与持续写作。",
   );
   const portrait = `${bp}/images/about-portrait.jpg`;
 
@@ -29,7 +29,6 @@ export function renderProfile({ htmlBody, page, site }) {
       <a class="profile-scroll" href="#profile-story">继续了解我 <span aria-hidden="true">↓</span></a>
     </div>
 
-    <p class="profile-hint" aria-hidden="true">移动光标，触碰粒子</p>
   </header>
 
   <section class="profile-story" id="profile-story">

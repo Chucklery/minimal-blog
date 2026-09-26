@@ -19,11 +19,11 @@ async function rebuild() {
   }
 
   building = true;
-  console.clear();
   console.log('🔨 Rebuilding...\n');
 
   try {
-    const { stderr } = await execAsync('node scripts/build.js', { cwd: ROOT });
+    const { stdout, stderr } = await execAsync('node scripts/build.js', { cwd: ROOT });
+    if (stdout) process.stdout.write(stdout);
     if (stderr) console.error(stderr);
   } catch (err) {
     console.error('Build failed:', err.message);
@@ -60,6 +60,8 @@ watcher.on('all', (event, filepath) => {
 });
 
 console.log('👀 Watching for changes...');
+console.log('   pnpm dev only watches files and rebuilds dist; it does not start a web server.');
+console.log('   To preview, run `pnpm preview` in another terminal: http://localhost:8088');
 console.log('   Press Ctrl+C to stop\n');
 
 // 首次构建
