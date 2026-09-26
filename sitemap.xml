@@ -19,6 +19,12 @@
     
   </url>
   <url>
+    <loc>https://chucklery.github.io/minimal-blog/about/profile/</loc>
+    <priority>0.6</priority>
+    
+    
+  </url>
+  <url>
     <loc>https://chucklery.github.io/minimal-blog/books/</loc>
     <priority>0.7</priority>
     
