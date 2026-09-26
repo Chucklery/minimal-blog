@@ -1,115 +1,83 @@
 # Minimal Blog
 
-极简高性能博客软件。Markdown 写作 → 自定义构建器 → 纯静态 HTML/CSS/JS → Nginx 本机部署。
+A fast, minimal static blog engine. Write in Markdown, build with a custom Node.js pipeline, and publish plain HTML, CSS, and JavaScript.
 
-## 特性
+[简体中文](README.zh-CN.md)
 
-- **零运行时框架**：无 React/Vue/Svelte/Next/Nuxt
-- **构建期渲染**：Markdown → HTML + Shiki 代码高亮
-- **极简审美**：Linear 精度 × Vercel 克制 × Notion 出版感
-- **本机部署**：Nginx for Windows，localhost:8088
-- **core/site 分离**：换站点换配置即可，不改核心
-- **< 6KB JS gzip**：主题切换、阅读进度、代码复制、TOC 高亮
+## Features
 
-## 快速开始
+- No client-side framework; pages are rendered at build time.
+- Markdown rendering with syntax-highlighted code blocks.
+- Separate reusable `core/` and site-specific `site/` layers.
+- Generates static pages and supporting feeds and metadata.
+- Local development builds the site, serves it at `http://localhost:8088`, and rebuilds when source files change.
 
-```bash
-# 安装依赖
+## Requirements
+
+- Node.js 22 or later
+- pnpm
+
+## Quick start
+
+```sh
 pnpm install
-
-# 开发（构建 + 预览 + 自动重建）
 pnpm dev
-
-# 构建
-pnpm build
-
-# 单独预览已有构建产物
-pnpm preview
-# → http://localhost:8088
 ```
 
-## 目录结构
+Open <http://localhost:8088>. `pnpm dev` builds the site and starts the preview server; edits to content, styles, scripts, templates, and images trigger a rebuild.
 
-```
-minimal-blog/
-  core/          # 可复用构建内核（不依赖站点）
-    content/     # 文章加载、校验、阅读时间
-    markdown/    # MD→HTML 渲染、Shiki 高亮、TOC 提取
-    template/    # HTML 模板（Layout、Home、Post、Archive、About）
-    assets/      # CSS/JS 构建、图片优化、public 复制
-    output/      # 写入页面、RSS、Sitemap
-    utils/       # 路径、日期、HTML 转义、slug
-  site/          # 当前站点（配置、内容、样式、脚本、静态资源）
-    site.config.js
-    content/
-    styles/
-    scripts/
-    public/
-  scripts/       # 构建编排、开发模式、部署、校验
-  tests/         # Playwright E2E
-  nginx/         # Nginx 部署配置
-  dist/          # 构建输出
+```sh
+pnpm build       # Build dist/
+pnpm preview     # Serve an existing dist/ build on port 8088
+pnpm check       # Check generated output
+pnpm test:e2e    # Run Playwright smoke tests
 ```
 
-## 写作
+## Write a post
 
-在 `site/content/posts/` 创建 Markdown 文件：
+Create a Markdown file under `site/content/posts/`:
 
 ```md
 ---
-title: "文章标题"
+title: "An article title"
 slug: "article-slug"
 date: "2026-06-05"
-description: "文章摘要。"
+description: "A one-sentence summary."
 tags: [design, coding]
 draft: false
 featured: false
 ---
 
-正文内容。
+Write the post here.
 ```
 
-然后 `pnpm build`，页面自动生成到 `/posts/article-slug.html`。
+Run `pnpm dev` to preview it, or `pnpm build` to generate the site in `dist/`.
 
-## 部署
+## Project layout
 
-```bash
+```text
+core/       Reusable content, rendering, templates, assets, and output code
+site/       Site configuration, content, styles, scripts, and public files
+scripts/    Build, development, deployment, and validation commands
+tests/      Playwright tests
+nginx/      Example Nginx configuration
+dist/       Generated site (not committed)
+```
+
+Site-level settings live in `site/site.config.js`. See [docs/development.md](docs/development.md) for development details and [docs/content-authoring.md](docs/content-authoring.md) for the full Markdown format.
+
+## Local deployment
+
+```sh
 pnpm deploy:local
 ```
 
-或手动：
+The deployment helper targets a local Windows Nginx setup. For other hosting environments, build with `pnpm build` and serve the generated `dist/` directory with a static web server.
 
-```bash
-pnpm build
-# 复制 nginx/minimal-blog.conf → local\nginx\conf\conf.d\
-# 启动 local\nginx\nginx.exe
-```
+## Project status
 
-## 验收
+This project is maintained in the open. Bug reports, security reports, and contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
-```bash
-pnpm check           # 构建产物校验
-pnpm test:e2e        # Playwright 冒烟测试
-```
+## License
 
-## 性能目标
-
-- Lighthouse Performance ≥ 95
-- JS gzip < 8KB
-- CSS gzip < 15KB
-- CLS → 0
-- LCP < 1.5s
-
-## 技术栈
-
-| 类型 | 工具 |
-|------|------|
-| 运行时 | Node.js 22 |
-| 包管理 | pnpm |
-| Markdown | markdown-it + gray-matter |
-| 代码高亮 | Shiki |
-| 图片 | sharp |
-| JS 构建 | esbuild |
-| CSS | Lightning CSS |
-| 测试 | Playwright |
-| 部署 | Nginx for Windows |
+This project is licensed under the [Apache License 2.0](LICENSE).

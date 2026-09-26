@@ -81,9 +81,9 @@
     const pixels = offctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
 
     count = compact
-      ? Math.min(4200, Math.round(width * height / 130))
-      : Math.min(12000, Math.round(width * height / 110));
-    count = Math.max(compact ? 2200 : 6000, count);
+      ? Math.min(1800, Math.round(width * height / 260))
+      : Math.min(4800, Math.round(width * height / 250));
+    count = Math.max(compact ? 850 : 2400, count);
     seed = (Math.imul(width | 0, 73856093) ^ Math.imul(height | 0, 19349663)) >>> 0;
 
     tx = new Float32Array(count);
