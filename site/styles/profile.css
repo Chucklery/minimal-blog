@@ -56,7 +56,7 @@
   object-fit: cover;
   object-position: 72% 42%;
   opacity: 0;
-  filter: saturate(0.72) contrast(1.12);
+  filter: brightness(1.26) saturate(0.82) contrast(1.08);
   transition: opacity 900ms ease;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .profile-hero.is-particle-fallback .profile-portrait {
-  opacity: 0.4;
+  opacity: 0.66;
 }
 
 .profile-hero.is-particle-fallback .profile-particles {
@@ -289,7 +289,7 @@
   }
 
   .profile-portrait {
-    opacity: 0.4;
+    opacity: 0.66;
   }
 
   .profile-hint {

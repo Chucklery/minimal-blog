@@ -17,7 +17,7 @@
   // Keep shadow particles cool and distinct from the near-black backdrop;
   // compress the photo's dark range so hair and face contours remain visible.
   const tones = [
-    '#344955', '#526875', '#74818a', '#936047', '#b55732',
+    '#526672', '#697f89', '#82929a', '#a36a4f', '#bd603a',
     '#d86839', '#f0804b', '#ffaf7e', '#ffe0c8',
   ];
   const ALPHA_LEVELS = 8;
@@ -48,6 +48,13 @@
   let drawOrder;
   let drawCounts;
   let drawStarts;
+  let mosaic;
+  let mosaicX = 0;
+  let mosaicY = 0;
+  let mosaicWidth = 0;
+  let mosaicHeight = 0;
+  let portraitCenterX = 0;
+  let portraitCenterY = 0;
 
   const random = () => {
     seed += 0x6d2b79f5;
@@ -59,6 +66,7 @@
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const smootherstep = (value) => value * value * value * (value * (value * 6 - 15) + 10);
+  const breathScale = (now) => 1 + Math.sin(now * 0.00068) * 0.055;
 
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, 2);
@@ -67,6 +75,158 @@
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function buildMosaic(pixels, imageWidth, imageHeight) {
+    mosaic = document.createElement('canvas');
+    mosaic.width = imageWidth;
+    mosaic.height = imageHeight;
+    const mosaicContext = mosaic.getContext('2d');
+    const pixelAt = (x, y) => {
+      const px = clamp(Math.round(x), 0, imageWidth - 1);
+      const py = clamp(Math.round(y), 0, imageHeight - 1);
+      const offset = (py * imageWidth + px) * 4;
+      return [pixels[offset], pixels[offset + 1], pixels[offset + 2]];
+    };
+    const brightness = (color) => (color[0] * 0.2126 + color[1] * 0.7152 + color[2] * 0.0722) / 255;
+    const minSize = Math.max(7, Math.round(imageWidth / 105));
+    const rootSize = minSize * 5;
+    // These regions follow the eyes, nose and lips in about-portrait.jpg.
+    // Normalized positions keep the detail aligned at every canvas size.
+    const featureZones = [
+      [0.375, 0.43, 0.12, 0.072],
+      [0.645, 0.44, 0.12, 0.072],
+      [0.505, 0.605, 0.115, 0.125],
+      [0.505, 0.7, 0.15, 0.07],
+    ];
+    const isFeature = (x, y) => featureZones.some(([cx, cy, rx, ry]) => {
+      const dx = (x / imageWidth - cx) / rx;
+      const dy = (y / imageHeight - cy) / ry;
+      return dx * dx + dy * dy < 1;
+    });
+    const touchesFeature = (x, y, blockWidth, blockHeight) => featureZones.some(([cx, cy, rx, ry]) => {
+      const closestX = clamp(cx * imageWidth, x, x + blockWidth);
+      const closestY = clamp(cy * imageHeight, y, y + blockHeight);
+      const dx = (closestX / imageWidth - cx) / rx;
+      const dy = (closestY / imageHeight - cy) / ry;
+      return dx * dx + dy * dy < 1;
+    });
+
+    function drawBlock(x, y, blockWidth, blockHeight) {
+      const feature = isFeature(x + blockWidth / 2, y + blockHeight / 2);
+      const nearFeature = feature || touchesFeature(x, y, blockWidth, blockHeight);
+      const colors = [
+        pixelAt(x + blockWidth * 0.25, y + blockHeight * 0.25),
+        pixelAt(x + blockWidth * 0.75, y + blockHeight * 0.25),
+        pixelAt(x + blockWidth * 0.25, y + blockHeight * 0.75),
+        pixelAt(x + blockWidth * 0.75, y + blockHeight * 0.75),
+        pixelAt(x + blockWidth * 0.5, y + blockHeight * 0.5),
+      ];
+      const levels = colors.map(brightness);
+      const warmth = colors.map((color) => color[0] - color[2]);
+      const detail = Math.max(...levels) - Math.min(...levels);
+      const colorEdge = Math.max(...warmth) - Math.min(...warmth);
+
+      // Broad planes stay intact; eyes, hair strands and the face boundary
+      // split into smaller blocks instead of becoming an even pixel grid.
+      const smallestBlock = nearFeature ? minSize * 0.45 : minSize;
+      if (blockWidth > smallestBlock * 1.5 && blockHeight > smallestBlock * 1.5
+        && (nearFeature || detail > 0.07 || colorEdge > 18)) {
+        const halfWidth = Math.ceil(blockWidth / 2);
+        const halfHeight = Math.ceil(blockHeight / 2);
+        drawBlock(x, y, halfWidth, halfHeight);
+        drawBlock(x + halfWidth, y, blockWidth - halfWidth, halfHeight);
+        drawBlock(x, y + halfHeight, halfWidth, blockHeight - halfHeight);
+        drawBlock(x + halfWidth, y + halfHeight, blockWidth - halfWidth, blockHeight - halfHeight);
+        return;
+      }
+
+      const average = [0, 1, 2].map((channel) =>
+        colors.reduce((sum, color) => sum + color[channel], 0) / colors.length);
+      const warm = clamp((average[0] - average[2] + 8) / 30, 0, 1);
+      const light = brightness(average);
+      if (!feature && warm < 0.18 && light < 0.24) return;
+
+      const bands = feature ? 14 : 10;
+      const band = Math.round(light * bands) / bands;
+      const shade = clamp((band + 0.035) / (light + 0.035), 0.82, 1.18);
+      const lift = warm * (1 - light);
+      let red = clamp(Math.round(average[0] * shade * 1.14 + lift * 55), 0, 255);
+      let green = clamp(Math.round(average[1] * shade * 1.08 + lift * 42), 0, 255);
+      let blue = clamp(Math.round(average[2] * shade + lift * 38), 0, 255);
+      if (!feature && warm > 0.26 && light < 0.18) {
+        red = Math.max(red, 68 + warm * 28);
+        green = Math.max(green, 51 + warm * 21);
+        blue = Math.max(blue, 48 + warm * 19);
+      }
+      if (feature) {
+        const contrast = light < 0.25 ? 0.72 : light > 0.47 ? 1.1 : 1;
+        red = Math.max(25, Math.min(255, red * contrast));
+        green = Math.max(29, Math.min(255, green * contrast));
+        blue = Math.max(33, Math.min(255, blue * contrast));
+      }
+      mosaicContext.fillStyle = `rgba(${red}, ${green}, ${blue}, ${feature ? 0.94 : 0.5 + warm * 0.42})`;
+      const inset = feature
+        ? Math.min(0.65, blockWidth * 0.09)
+        : Math.min(1.35, Math.max(0.85, blockWidth * 0.075));
+      mosaicContext.fillRect(x + inset, y + inset, blockWidth - inset * 2, blockHeight - inset * 2);
+    }
+
+    for (let y = 0; y < imageHeight; y += rootSize) {
+      for (let x = 0; x < imageWidth; x += rootSize) {
+        drawBlock(x, y, Math.min(rootSize, imageWidth - x), Math.min(rootSize, imageHeight - y));
+      }
+    }
+
+    // Fine strokes in the facial regions make eyelids, the nose bridge and
+    // lip crease read clearly over the larger geometric planes.
+    function drawContour(x, y, step, feature) {
+      const left = pixelAt(x - step, y);
+      const right = pixelAt(x + step, y);
+      const top = pixelAt(x, y - step);
+      const bottom = pixelAt(x, y + step);
+      const gx = brightness(right) - brightness(left);
+      const gy = brightness(bottom) - brightness(top);
+      const strength = Math.hypot(gx, gy);
+      const center = pixelAt(x, y);
+      const warm = center[0] > center[2] + 4;
+      if (strength < (feature ? 0.055 : warm ? 0.105 : 0.18)) return;
+      const length = step * clamp(strength * (feature ? 3.4 : 2.4), 0.45, 0.95);
+      const angle = Math.atan2(gy, gx) + Math.PI / 2;
+      if (feature) {
+        mosaicContext.strokeStyle = brightness(center) < 0.25
+          ? 'rgba(20, 27, 35, 0.88)'
+          : `rgba(255, 214, 180, ${clamp(strength * 1.7, 0.4, 0.85)})`;
+      } else {
+        mosaicContext.strokeStyle = warm
+          ? `rgba(255, 190, 145, ${clamp(strength * 1.5, 0.26, 0.68)})`
+          : `rgba(145, 175, 188, ${clamp(strength, 0.2, 0.45)})`;
+      }
+      mosaicContext.lineWidth = feature ? 1.1 : Math.max(1, minSize * 0.18);
+      mosaicContext.beginPath();
+      mosaicContext.moveTo(x - Math.cos(angle) * length / 2, y - Math.sin(angle) * length / 2);
+      mosaicContext.lineTo(x + Math.cos(angle) * length / 2, y + Math.sin(angle) * length / 2);
+      mosaicContext.stroke();
+    }
+
+    const edgeStep = minSize;
+    for (let y = edgeStep; y < imageHeight - edgeStep; y += edgeStep) {
+      for (let x = edgeStep; x < imageWidth - edgeStep; x += edgeStep) {
+        if (!isFeature(x, y)) drawContour(x, y, edgeStep, false);
+      }
+    }
+    const fineStep = Math.max(3, Math.round(minSize * 0.45));
+    for (const [cx, cy, rx, ry] of featureZones) {
+      const left = Math.max(fineStep, Math.floor((cx - rx) * imageWidth));
+      const right = Math.min(imageWidth - fineStep, Math.ceil((cx + rx) * imageWidth));
+      const top = Math.max(fineStep, Math.floor((cy - ry) * imageHeight));
+      const bottom = Math.min(imageHeight - fineStep, Math.ceil((cy + ry) * imageHeight));
+      for (let y = top; y < bottom; y += fineStep) {
+        for (let x = left; x < right; x += fineStep) {
+          if (isFeature(x, y)) drawContour(x, y, fineStep, true);
+        }
+      }
+    }
   }
 
   function samplePortrait() {
@@ -79,6 +239,7 @@
     const offctx = offscreen.getContext('2d', { willReadFrequently: true });
     offctx.drawImage(source, 0, 0, sampleWidth, sampleHeight);
     const pixels = offctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
+    buildMosaic(pixels, sampleWidth, sampleHeight);
 
     count = compact
       ? Math.min(5500, Math.round(width * height / 85))
@@ -107,8 +268,14 @@
 
     const originX = compact ? (width - sampleWidth) / 2 : width * 0.46;
     const originY = compact ? Math.max(40, height * 0.05) : (height - sampleHeight) * 0.38;
+    mosaicX = originX;
+    mosaicY = originY;
+    mosaicWidth = sampleWidth;
+    mosaicHeight = sampleHeight;
     const centerX = originX + sampleWidth / 2;
     const centerY = originY + sampleHeight / 2;
+    portraitCenterX = centerX;
+    portraitCenterY = centerY;
     const reach = Math.max(width, height) * 0.76;
 
     for (let index = 0; index < count; index++) {
@@ -182,9 +349,9 @@
   }
 
   function update(now) {
-    const centerX = width < 760 ? width / 2 : width * 0.72;
-    const centerY = height * 0.46;
-    const breath = 1 + Math.sin(now * 0.00042) * 0.018;
+    const centerX = portraitCenterX;
+    const centerY = portraitCenterY;
+    const breath = breathScale(now);
 
     for (let index = 0; index < count; index++) {
       const delay = lanes[index] * 58;
@@ -228,6 +395,13 @@
     ctx.fillRect(0, 0, width, height);
     const entrance = clamp((now - startedAt) / 2600, 0, 1);
     const settled = smootherstep(clamp((now - startedAt) / 4100, 0, 1));
+    const breath = breathScale(now);
+    ctx.save();
+    ctx.globalAlpha = 0.84 * smootherstep(clamp((now - startedAt) / 2000, 0, 1));
+    ctx.translate(portraitCenterX, portraitCenterY);
+    ctx.scale(breath, breath);
+    ctx.drawImage(mosaic, mosaicX - portraitCenterX, mosaicY - portraitCenterY, mosaicWidth, mosaicHeight);
+    ctx.restore();
     drawCounts.fill(0);
 
     // Each dot pulses on its own phase. Quantized alpha buckets keep the
@@ -235,9 +409,7 @@
     // fade in and out independently.
     for (let index = 0; index < count; index++) {
       const wave = (Math.sin(now * 0.001 * pulseSpeeds[index] + phases[index]) + 1) * 0.5;
-      const pulse = wave < 0.4
-        ? 0.12 + wave * 0.65
-        : 0.38 + ((wave - 0.4) / 0.6) * 0.62;
+      const pulse = 0.58 + wave * 0.42;
       const opacity = 1 - settled + pulse * settled;
       const level = Math.round(opacity * (ALPHA_LEVELS - 1));
       alphaIndex[index] = level;
@@ -262,13 +434,16 @@
       const alpha = (bucket % ALPHA_LEVELS) / (ALPHA_LEVELS - 1);
       ctx.fillStyle = tones[tone];
       ctx.globalAlpha = alpha;
+      ctx.beginPath();
 
       for (let cursor = from; cursor < to; cursor++) {
         const index = drawOrder[cursor];
         const shimmer = 0.78 + alphaIndex[index] / (ALPHA_LEVELS - 1) * 0.3;
-        const size = sizes[index] * shimmer * (0.58 + entrance * 0.42);
-        ctx.fillRect(px[index], py[index], size, size);
+        const radius = sizes[index] * shimmer * (0.58 + entrance * 0.42) / 2;
+        ctx.moveTo(px[index] + radius, py[index]);
+        ctx.arc(px[index], py[index], radius, 0, TAU);
       }
+      ctx.fill();
       from = to;
     }
     ctx.globalAlpha = 1;
