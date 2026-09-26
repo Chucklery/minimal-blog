@@ -1,4 +1,4 @@
-// 将照片实时重组为有景深、呼吸感和指针反馈的粒子肖像。
+// 从照片的颜色与局部轮廓采样，用粒子重组肖像和五官。
 (() => {
   const canvas = document.querySelector('[data-profile-particles]');
   const hero = document.querySelector('[data-profile-hero]');
@@ -14,14 +14,17 @@
   source.src = canvas.dataset.source;
 
   const TAU = Math.PI * 2;
-  // Keep shadow particles cool and distinct from the near-black backdrop;
-  // compress the photo's dark range so hair and face contours remain visible.
+  // Lift the source photo's darkest colors enough to read on the black canvas.
   const tones = [
-    '#526672', '#697f89', '#82929a', '#a36a4f', '#bd603a',
-    '#d86839', '#f0804b', '#ffaf7e', '#ffe0c8',
+    '#4a5c67', '#647780', '#87959b', '#b1b6b2',
+    '#493b37', '#64483c', '#80503e', '#9e5b42', '#bd6a48',
+    '#d67a50', '#ea8c5d', '#f6a171', '#ffb78a', '#ffd0a9', '#ffe0c5',
   ];
   const ALPHA_LEVELS = 8;
   const pointer = { x: -10000, y: -10000, active: false };
+  const laneEase = new Float32Array(12);
+  const laneCos = new Float32Array(12);
+  const laneSin = new Float32Array(12);
   let width = 0;
   let height = 0;
   let dpr = 1;
@@ -40,6 +43,9 @@
   let ox;
   let oy;
   let sizes;
+  let scatterX;
+  let scatterY;
+  let detailFlags;
   let phases;
   let pulseSpeeds;
   let lanes;
@@ -48,11 +54,6 @@
   let drawOrder;
   let drawCounts;
   let drawStarts;
-  let mosaic;
-  let mosaicX = 0;
-  let mosaicY = 0;
-  let mosaicWidth = 0;
-  let mosaicHeight = 0;
   let portraitCenterX = 0;
   let portraitCenterY = 0;
 
@@ -77,157 +78,22 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function buildMosaic(pixels, imageWidth, imageHeight) {
-    mosaic = document.createElement('canvas');
-    mosaic.width = imageWidth;
-    mosaic.height = imageHeight;
-    const mosaicContext = mosaic.getContext('2d');
-    const pixelAt = (x, y) => {
-      const px = clamp(Math.round(x), 0, imageWidth - 1);
-      const py = clamp(Math.round(y), 0, imageHeight - 1);
-      const offset = (py * imageWidth + px) * 4;
-      return [pixels[offset], pixels[offset + 1], pixels[offset + 2]];
-    };
-    const brightness = (color) => (color[0] * 0.2126 + color[1] * 0.7152 + color[2] * 0.0722) / 255;
-    const minSize = Math.max(7, Math.round(imageWidth / 105));
-    const rootSize = minSize * 5;
-    // These regions follow the eyes, nose and lips in about-portrait.jpg.
-    // Normalized positions keep the detail aligned at every canvas size.
-    const featureZones = [
-      [0.375, 0.43, 0.12, 0.072],
-      [0.645, 0.44, 0.12, 0.072],
-      [0.505, 0.605, 0.115, 0.125],
-      [0.505, 0.7, 0.15, 0.07],
-    ];
-    const isFeature = (x, y) => featureZones.some(([cx, cy, rx, ry]) => {
+  // Feature zones match the portrait and receive more edge particles.
+  const featureZones = [
+    [0.375, 0.43, 0.12, 0.072],
+    [0.645, 0.44, 0.12, 0.072],
+    [0.505, 0.605, 0.115, 0.125],
+    [0.505, 0.7, 0.15, 0.07],
+  ];
+  const featureAt = (x, y, imageWidth, imageHeight) => {
+    for (let index = featureZones.length - 1; index >= 0; index--) {
+      const [cx, cy, rx, ry] = featureZones[index];
       const dx = (x / imageWidth - cx) / rx;
       const dy = (y / imageHeight - cy) / ry;
-      return dx * dx + dy * dy < 1;
-    });
-    const touchesFeature = (x, y, blockWidth, blockHeight) => featureZones.some(([cx, cy, rx, ry]) => {
-      const closestX = clamp(cx * imageWidth, x, x + blockWidth);
-      const closestY = clamp(cy * imageHeight, y, y + blockHeight);
-      const dx = (closestX / imageWidth - cx) / rx;
-      const dy = (closestY / imageHeight - cy) / ry;
-      return dx * dx + dy * dy < 1;
-    });
-
-    function drawBlock(x, y, blockWidth, blockHeight) {
-      const feature = isFeature(x + blockWidth / 2, y + blockHeight / 2);
-      const nearFeature = feature || touchesFeature(x, y, blockWidth, blockHeight);
-      const colors = [
-        pixelAt(x + blockWidth * 0.25, y + blockHeight * 0.25),
-        pixelAt(x + blockWidth * 0.75, y + blockHeight * 0.25),
-        pixelAt(x + blockWidth * 0.25, y + blockHeight * 0.75),
-        pixelAt(x + blockWidth * 0.75, y + blockHeight * 0.75),
-        pixelAt(x + blockWidth * 0.5, y + blockHeight * 0.5),
-      ];
-      const levels = colors.map(brightness);
-      const warmth = colors.map((color) => color[0] - color[2]);
-      const detail = Math.max(...levels) - Math.min(...levels);
-      const colorEdge = Math.max(...warmth) - Math.min(...warmth);
-
-      // Broad planes stay intact; eyes, hair strands and the face boundary
-      // split into smaller blocks instead of becoming an even pixel grid.
-      const smallestBlock = nearFeature ? minSize * 0.45 : minSize;
-      if (blockWidth > smallestBlock * 1.5 && blockHeight > smallestBlock * 1.5
-        && (nearFeature || detail > 0.07 || colorEdge > 18)) {
-        const halfWidth = Math.ceil(blockWidth / 2);
-        const halfHeight = Math.ceil(blockHeight / 2);
-        drawBlock(x, y, halfWidth, halfHeight);
-        drawBlock(x + halfWidth, y, blockWidth - halfWidth, halfHeight);
-        drawBlock(x, y + halfHeight, halfWidth, blockHeight - halfHeight);
-        drawBlock(x + halfWidth, y + halfHeight, blockWidth - halfWidth, blockHeight - halfHeight);
-        return;
-      }
-
-      const average = [0, 1, 2].map((channel) =>
-        colors.reduce((sum, color) => sum + color[channel], 0) / colors.length);
-      const warm = clamp((average[0] - average[2] + 8) / 30, 0, 1);
-      const light = brightness(average);
-      if (!feature && warm < 0.18 && light < 0.24) return;
-
-      const bands = feature ? 14 : 10;
-      const band = Math.round(light * bands) / bands;
-      const shade = clamp((band + 0.035) / (light + 0.035), 0.82, 1.18);
-      const lift = warm * (1 - light);
-      let red = clamp(Math.round(average[0] * shade * 1.14 + lift * 55), 0, 255);
-      let green = clamp(Math.round(average[1] * shade * 1.08 + lift * 42), 0, 255);
-      let blue = clamp(Math.round(average[2] * shade + lift * 38), 0, 255);
-      if (!feature && warm > 0.26 && light < 0.18) {
-        red = Math.max(red, 68 + warm * 28);
-        green = Math.max(green, 51 + warm * 21);
-        blue = Math.max(blue, 48 + warm * 19);
-      }
-      if (feature) {
-        const contrast = light < 0.25 ? 0.72 : light > 0.47 ? 1.1 : 1;
-        red = Math.max(25, Math.min(255, red * contrast));
-        green = Math.max(29, Math.min(255, green * contrast));
-        blue = Math.max(33, Math.min(255, blue * contrast));
-      }
-      mosaicContext.fillStyle = `rgba(${red}, ${green}, ${blue}, ${feature ? 0.94 : 0.5 + warm * 0.42})`;
-      const inset = feature
-        ? Math.min(0.65, blockWidth * 0.09)
-        : Math.min(1.35, Math.max(0.85, blockWidth * 0.075));
-      mosaicContext.fillRect(x + inset, y + inset, blockWidth - inset * 2, blockHeight - inset * 2);
+      if (dx * dx + dy * dy < 1) return index;
     }
-
-    for (let y = 0; y < imageHeight; y += rootSize) {
-      for (let x = 0; x < imageWidth; x += rootSize) {
-        drawBlock(x, y, Math.min(rootSize, imageWidth - x), Math.min(rootSize, imageHeight - y));
-      }
-    }
-
-    // Fine strokes in the facial regions make eyelids, the nose bridge and
-    // lip crease read clearly over the larger geometric planes.
-    function drawContour(x, y, step, feature) {
-      const left = pixelAt(x - step, y);
-      const right = pixelAt(x + step, y);
-      const top = pixelAt(x, y - step);
-      const bottom = pixelAt(x, y + step);
-      const gx = brightness(right) - brightness(left);
-      const gy = brightness(bottom) - brightness(top);
-      const strength = Math.hypot(gx, gy);
-      const center = pixelAt(x, y);
-      const warm = center[0] > center[2] + 4;
-      if (strength < (feature ? 0.055 : warm ? 0.105 : 0.18)) return;
-      const length = step * clamp(strength * (feature ? 3.4 : 2.4), 0.45, 0.95);
-      const angle = Math.atan2(gy, gx) + Math.PI / 2;
-      if (feature) {
-        mosaicContext.strokeStyle = brightness(center) < 0.25
-          ? 'rgba(20, 27, 35, 0.88)'
-          : `rgba(255, 214, 180, ${clamp(strength * 1.7, 0.4, 0.85)})`;
-      } else {
-        mosaicContext.strokeStyle = warm
-          ? `rgba(255, 190, 145, ${clamp(strength * 1.5, 0.26, 0.68)})`
-          : `rgba(145, 175, 188, ${clamp(strength, 0.2, 0.45)})`;
-      }
-      mosaicContext.lineWidth = feature ? 1.1 : Math.max(1, minSize * 0.18);
-      mosaicContext.beginPath();
-      mosaicContext.moveTo(x - Math.cos(angle) * length / 2, y - Math.sin(angle) * length / 2);
-      mosaicContext.lineTo(x + Math.cos(angle) * length / 2, y + Math.sin(angle) * length / 2);
-      mosaicContext.stroke();
-    }
-
-    const edgeStep = minSize;
-    for (let y = edgeStep; y < imageHeight - edgeStep; y += edgeStep) {
-      for (let x = edgeStep; x < imageWidth - edgeStep; x += edgeStep) {
-        if (!isFeature(x, y)) drawContour(x, y, edgeStep, false);
-      }
-    }
-    const fineStep = Math.max(3, Math.round(minSize * 0.45));
-    for (const [cx, cy, rx, ry] of featureZones) {
-      const left = Math.max(fineStep, Math.floor((cx - rx) * imageWidth));
-      const right = Math.min(imageWidth - fineStep, Math.ceil((cx + rx) * imageWidth));
-      const top = Math.max(fineStep, Math.floor((cy - ry) * imageHeight));
-      const bottom = Math.min(imageHeight - fineStep, Math.ceil((cy + ry) * imageHeight));
-      for (let y = top; y < bottom; y += fineStep) {
-        for (let x = left; x < right; x += fineStep) {
-          if (isFeature(x, y)) drawContour(x, y, fineStep, true);
-        }
-      }
-    }
-  }
+    return -1;
+  };
 
   function samplePortrait() {
     const compact = width < 760;
@@ -239,14 +105,79 @@
     const offctx = offscreen.getContext('2d', { willReadFrequently: true });
     offctx.drawImage(source, 0, 0, sampleWidth, sampleHeight);
     const pixels = offctx.getImageData(0, 0, sampleWidth, sampleHeight).data;
-    buildMosaic(pixels, sampleWidth, sampleHeight);
+    const lumaAt = (x, y) => {
+      const px = clamp(x, 0, sampleWidth - 1);
+      const py = clamp(y, 0, sampleHeight - 1);
+      const pixel = (py * sampleWidth + px) * 4;
+      return pixels[pixel] * 0.2126 + pixels[pixel + 1] * 0.7152 + pixels[pixel + 2] * 0.0722;
+    };
+    const edgeAt = (x, y, step) => (
+      Math.abs(lumaAt(x + step, y) - lumaAt(x - step, y))
+      + Math.abs(lumaAt(x, y + step) - lumaAt(x, y - step))
+    ) / 255;
+    const gridStep = compact ? 2 : 3;
+    const pools = [[], [], [], [], [], []];
+    // Feature outlines, lit features, dark features, other edges, skin, hair.
 
-    count = compact
-      ? Math.min(5500, Math.round(width * height / 85))
-      : Math.min(15000, Math.round(width * height / 78));
-    count = Math.max(compact ? 3200 : 7000, count);
-    count = Math.max(compact ? 850 : 2400, count);
+    // A loose grid covers the portrait outside the facial details.
+    for (let y = gridStep; y < sampleHeight - gridStep; y += gridStep) {
+      for (let x = gridStep; x < sampleWidth - gridStep; x += gridStep) {
+        const pixel = (y * sampleWidth + x) * 4;
+        const red = pixels[pixel];
+        const green = pixels[pixel + 1];
+        const blue = pixels[pixel + 2];
+        const light = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
+        if (featureAt(x, y, sampleWidth, sampleHeight) >= 0) continue;
+        if (red <= blue + 3 && light < 0.26) continue;
+        const edge = edgeAt(x, y, gridStep);
+        if (edge > 0.16) pools[3].push([x, y]);
+        else if (light > 0.22 && red > blue + 10) pools[4].push([x, y]);
+        else pools[5].push([x, y]);
+      }
+    }
+
+    // A finer grid follows the actual eye, nose and lip pixels. Dark pupils
+    // and creases get few tiny dots; their lit boundaries stay densely drawn.
+    const fineStep = compact ? 1 : 2;
+    for (let zone = 0; zone < featureZones.length; zone++) {
+      const [cx, cy, rx, ry] = featureZones[zone];
+      const left = Math.max(fineStep, Math.floor((cx - rx) * sampleWidth));
+      const right = Math.min(sampleWidth - fineStep, Math.ceil((cx + rx) * sampleWidth));
+      const top = Math.max(fineStep, Math.floor((cy - ry) * sampleHeight));
+      const bottom = Math.min(sampleHeight - fineStep, Math.ceil((cy + ry) * sampleHeight));
+      for (let y = top; y < bottom; y += fineStep) {
+        for (let x = left; x < right; x += fineStep) {
+          if (featureAt(x, y, sampleWidth, sampleHeight) !== zone) continue;
+          const pixel = (y * sampleWidth + x) * 4;
+          const red = pixels[pixel];
+          const green = pixels[pixel + 1];
+          const blue = pixels[pixel + 2];
+          const light = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
+          const darkLimit = zone === 3 ? 0.44 : zone === 2 ? 0.28 : 0.25;
+          if (light < darkLimit) pools[2].push([x, y]);
+          else if (edgeAt(x, y, fineStep) > 0.075) pools[0].push([x, y]);
+          else pools[1].push([x, y]);
+        }
+      }
+    }
+
+    count = Math.round(Math.max(
+      compact ? 5000 : 10000,
+      Math.min(compact ? 8000 : 24000, Math.round(width * height / (compact ? 44 : 55)))
+    ) * 0.9);
     seed = (Math.imul(width | 0, 73856093) ^ Math.imul(height | 0, 19349663)) >>> 0;
+    for (const pool of pools) {
+      for (let index = pool.length - 1; index > 0; index--) {
+        const other = (random() * (index + 1)) | 0;
+        [pool[index], pool[other]] = [pool[other], pool[index]];
+      }
+    }
+    const cursors = [0, 0, 0, 0, 0, 0];
+    const featureOutlineEnd = Math.round(count * 0.1);
+    const featureLightEnd = Math.round(count * 0.25);
+    const featureDarkEnd = Math.round(count * 0.28);
+    const edgeEnd = Math.round(count * 0.43);
+    const faceEnd = Math.round(count * 0.81);
 
     tx = new Float32Array(count);
     ty = new Float32Array(count);
@@ -257,6 +188,9 @@
     ox = new Float32Array(count);
     oy = new Float32Array(count);
     sizes = new Float32Array(count);
+    scatterX = new Float32Array(count);
+    scatterY = new Float32Array(count);
+    detailFlags = new Uint8Array(count);
     phases = new Float32Array(count);
     pulseSpeeds = new Float32Array(count);
     lanes = new Uint8Array(count);
@@ -268,10 +202,6 @@
 
     const originX = compact ? (width - sampleWidth) / 2 : width * 0.46;
     const originY = compact ? Math.max(40, height * 0.05) : (height - sampleHeight) * 0.38;
-    mosaicX = originX;
-    mosaicY = originY;
-    mosaicWidth = sampleWidth;
-    mosaicHeight = sampleHeight;
     const centerX = originX + sampleWidth / 2;
     const centerY = originY + sampleHeight / 2;
     portraitCenterX = centerX;
@@ -279,47 +209,25 @@
     const reach = Math.max(width, height) * 0.76;
 
     for (let index = 0; index < count; index++) {
-      let localX = 0;
-      let localY = 0;
-      let luminance = 0;
-      let red = 0;
-      let green = 0;
-      let blue = 0;
-      let edge = 0;
-      let warmth = 0;
+      let type = index < featureOutlineEnd ? 0
+        : index < featureLightEnd ? 1
+          : index < featureDarkEnd ? 2
+            : index < edgeEnd ? 3
+              : index < faceEnd ? 4 : 5;
+      if (!pools[type].length) type = pools.findIndex((pool) => pool.length);
+      const pool = pools[type];
+      const candidate = pool[cursors[type]++ % pool.length];
+      const jitter = type < 3 ? 0.18 : 0.4;
+      const localX = clamp(Math.round(candidate[0] + (random() - 0.5) * gridStep * jitter), 0, sampleWidth - 1);
+      const localY = clamp(Math.round(candidate[1] + (random() - 0.5) * gridStep * jitter), 0, sampleHeight - 1);
+      const pixel = (localY * sampleWidth + localX) * 4;
+      const red = pixels[pixel];
+      const green = pixels[pixel + 1];
+      const blue = pixels[pixel + 2];
+      const light = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
+      const warm = red > blue + 8;
 
-      for (let attempt = 0; attempt < 160; attempt++) {
-        localX = Math.floor(random() * sampleWidth);
-        localY = Math.floor(random() * sampleHeight);
-        const pixel = (localY * sampleWidth + localX) * 4;
-        red = pixels[pixel];
-        green = pixels[pixel + 1];
-        blue = pixels[pixel + 2];
-        luminance = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
-
-        const left = Math.max(0, localX - 1);
-        const right = Math.min(sampleWidth - 1, localX + 1);
-        const top = Math.max(0, localY - 1);
-        const bottom = Math.min(sampleHeight - 1, localY + 1);
-        const lumaAt = (x, y) => {
-          const neighbor = (y * sampleWidth + x) * 4;
-          return pixels[neighbor] * 0.2126 + pixels[neighbor + 1] * 0.7152 + pixels[neighbor + 2] * 0.0722;
-        };
-        edge = clamp((Math.abs(lumaAt(right, localY) - lumaAt(left, localY)) + Math.abs(lumaAt(localX, bottom) - lumaAt(localX, top))) / 255 * 2.2, 0, 1);
-        warmth = clamp((red - blue - 4) / 75, 0, 1);
-
-        const nx = (localX / sampleWidth - 0.5) * 2;
-        const ny = (localY / sampleHeight - 0.5) * 2;
-        const vignette = clamp(1 - Math.pow(Math.hypot(nx * 0.84, ny * 0.96), 3), 0, 1);
-        // Favor warm hair/skin and local strands while suppressing the cool,
-        // low-contrast background. This tightens the portrait silhouette.
-        const coolShadowPenalty = blue > red * 1.18 && luminance < 0.48 ? 0.38 : 1;
-        const density = vignette
-          * (0.035 + luminance * 0.58 + warmth * 0.8 + edge * 0.25)
-          * coolShadowPenalty;
-        if (random() < density) break;
-      }
-
+      detailFlags[index] = type < 3 ? 2 : type === 3 ? 1 : 0;
       tx[index] = originX + localX;
       ty[index] = originY + localY;
 
@@ -329,19 +237,27 @@
       sy[index] = centerY + Math.sin(angle) * radius;
       px[index] = sx[index];
       py[index] = sy[index];
-      sizes[index] = 1.05 + random() * 1.75;
+      sizes[index] = type === 0 ? 1.25 + random() * 0.7
+        : type === 1 ? 1.65 + random() * 0.8
+          : type === 2 ? 0.85 + random() * 0.55
+            : type === 3 ? 1.7 + random()
+              : 2.35 + random() * 1.4;
+      const scatterAngle = Math.atan2(localY - sampleHeight / 2, localX - sampleWidth / 2)
+        + (random() - 0.5) * 1.1;
+      const scatterDistance = detailFlags[index] === 2
+        ? 0.45 + random() * 0.65
+        : detailFlags[index] === 1
+          ? 0.9 + random() * 1.1
+          : 1.4 + random() * 2;
+      scatterX[index] = Math.cos(scatterAngle) * scatterDistance;
+      scatterY[index] = Math.sin(scatterAngle) * scatterDistance;
       phases[index] = random() * TAU;
       pulseSpeeds[index] = 1.35 + random() * 1.9;
       lanes[index] = (random() * 12) | 0;
-
-      const warmBoost = clamp((red - blue - 4) / 75, 0, 1) * 0.34;
-      const contrastLuminance = clamp((luminance - 0.02) * 1.52 + warmBoost + edge * 0.14, 0, 1);
-      const selectedTone = clamp(
-        Math.round(contrastLuminance * (tones.length - 1)),
-        0,
-        tones.length - 1
-      );
-      toneIndex[index] = selectedTone;
+      const sampledTone = warm
+        ? 4 + Math.round(clamp((light - 0.02) * 1.2, 0, 1) * 10)
+        : Math.round(clamp(light * 2.2, 0, 1) * 3);
+      toneIndex[index] = type === 0 && warm ? Math.min(tones.length - 1, sampledTone + 1) : sampledTone;
     }
 
     startedAt = performance.now();
@@ -352,23 +268,33 @@
     const centerX = portraitCenterX;
     const centerY = portraitCenterY;
     const breath = breathScale(now);
-
-    for (let index = 0; index < count; index++) {
-      const delay = lanes[index] * 58;
-      const progress = clamp((now - startedAt - delay) / 3400, 0, 1);
+    const dispersion = smootherstep(clamp((breath - 1) / 0.055, 0, 1));
+    for (let lane = 0; lane < laneEase.length; lane++) {
+      const progress = clamp((now - startedAt - lane * 30) / 1900, 0, 1);
       const eased = smootherstep(progress);
       const orbit = (1 - eased) * (TAU * 1.12);
+      laneEase[lane] = eased;
+      laneCos[lane] = Math.cos(orbit);
+      laneSin[lane] = Math.sin(orbit);
+    }
+
+    for (let index = 0; index < count; index++) {
+      const lane = lanes[index];
+      const eased = laneEase[lane];
       const relX = sx[index] - centerX;
       const relY = sy[index] - centerY;
-      const rotatedX = relX * Math.cos(orbit) - relY * Math.sin(orbit);
-      const rotatedY = relX * Math.sin(orbit) + relY * Math.cos(orbit);
+      const rotatedX = relX * laneCos[lane] - relY * laneSin[lane];
+      const rotatedY = relX * laneSin[lane] + relY * laneCos[lane];
       const startX = centerX + rotatedX;
       const startY = centerY + rotatedY * (0.72 + eased * 0.28);
       const targetX = centerX + (tx[index] - centerX) * breath;
       const targetY = centerY + (ty[index] - centerY) * breath;
-      const drift = Math.sin(now * 0.00055 + phases[index]) * 1.8 * eased;
-      const baseX = startX + (targetX - startX) * eased + drift;
-      const baseY = startY + (targetY - startY) * eased + Math.cos(now * 0.00041 + phases[index]) * 1.4 * eased;
+      const drift = Math.sin(now * 0.00055 + phases[index]) * (detailFlags[index] ? 0.4 : 1.35) * eased;
+      const baseX = startX + (targetX - startX) * eased + drift
+        + scatterX[index] * dispersion * eased;
+      const baseY = startY + (targetY - startY) * eased
+        + Math.cos(now * 0.00041 + phases[index]) * (detailFlags[index] ? 0.35 : 1.1) * eased
+        + scatterY[index] * dispersion * eased;
 
       const dx = pointer.x - baseX;
       const dy = pointer.y - baseY;
@@ -379,8 +305,9 @@
       if (pointer.active && distanceSquared > 1 && distanceSquared < radius * radius) {
         const distance = Math.sqrt(distanceSquared);
         const force = (radius - distance) / radius;
-        desiredX = -(dx / distance) * force * 29;
-        desiredY = -(dy / distance) * force * 29;
+        const displacement = detailFlags[index] === 2 ? 3 : detailFlags[index] ? 10 : 29;
+        desiredX = -(dx / distance) * force * displacement;
+        desiredY = -(dy / distance) * force * displacement;
       }
 
       ox[index] += (desiredX - ox[index]) * (pointer.active ? 0.2 : 0.1);
@@ -393,15 +320,8 @@
   function draw(now) {
     ctx.fillStyle = '#05090d';
     ctx.fillRect(0, 0, width, height);
-    const entrance = clamp((now - startedAt) / 2600, 0, 1);
-    const settled = smootherstep(clamp((now - startedAt) / 4100, 0, 1));
-    const breath = breathScale(now);
-    ctx.save();
-    ctx.globalAlpha = 0.84 * smootherstep(clamp((now - startedAt) / 2000, 0, 1));
-    ctx.translate(portraitCenterX, portraitCenterY);
-    ctx.scale(breath, breath);
-    ctx.drawImage(mosaic, mosaicX - portraitCenterX, mosaicY - portraitCenterY, mosaicWidth, mosaicHeight);
-    ctx.restore();
+    const entrance = clamp((now - startedAt) / 1600, 0, 1);
+    const settled = smootherstep(clamp((now - startedAt) / 2500, 0, 1));
     drawCounts.fill(0);
 
     // Each dot pulses on its own phase. Quantized alpha buckets keep the
@@ -409,7 +329,7 @@
     // fade in and out independently.
     for (let index = 0; index < count; index++) {
       const wave = (Math.sin(now * 0.001 * pulseSpeeds[index] + phases[index]) + 1) * 0.5;
-      const pulse = 0.58 + wave * 0.42;
+      const pulse = detailFlags[index] ? 0.9 + wave * 0.1 : 0.78 + wave * 0.22;
       const opacity = 1 - settled + pulse * settled;
       const level = Math.round(opacity * (ALPHA_LEVELS - 1));
       alphaIndex[index] = level;
